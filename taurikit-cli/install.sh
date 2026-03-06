@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-REPO="Demoen/taurikit-cli"
+REPO="tCoOpy/taurikit"
 BIN_NAME="taurikit"
 INSTALL_DIR="${TAURIKIT_INSTALL_DIR:-$HOME/.taurikit/bin}"
 
@@ -13,7 +13,7 @@ main() {
     local os arch target
     os="$(detect_os)"
     arch="$(detect_arch)"
-    target="${os}-${arch}"
+    target="${arch}-${os}"
 
     local version
     version="${TAURIKIT_VERSION:-$(fetch_latest_version)}"
@@ -46,9 +46,9 @@ main() {
 
 detect_os() {
     case "$(uname -s)" in
-        Linux*)  echo "linux" ;;
-        Darwin*) echo "macos" ;;
-        MINGW*|MSYS*|CYGWIN*) echo "windows" ;;
+        Linux*)  echo "unknown-linux-gnu" ;;
+        Darwin*) echo "apple-darwin" ;;
+        MINGW*|MSYS*|CYGWIN*) echo "pc-windows-msvc" ;;
         *) err "Unsupported OS: $(uname -s)" ;;
     esac
 }

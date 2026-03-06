@@ -1,12 +1,12 @@
 $ErrorActionPreference = "Stop"
 
-$Repo = "Demoen/taurikit-cli"
+$Repo = "tCoOpy/taurikit"
 $BinName = "taurikit.exe"
 $InstallDir = if ($env:TAURIKIT_INSTALL_DIR) { $env:TAURIKIT_INSTALL_DIR } else { Join-Path $HOME ".taurikit\bin" }
 
 function Main {
     $arch = Get-Arch
-    $target = "windows-$arch"
+    $target = "x86_64-pc-windows-msvc"
 
     $version = if ($env:TAURIKIT_VERSION) { $env:TAURIKIT_VERSION } else { Get-LatestVersion }
 

@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:migrate:local": "wrangler d1 execute taurikit-db --local --file=schema.sql",
-    "db:migrate:remote": "wrangler d1 execute taurikit-db --remote --file=schema.sql"
+    "db:migrate:local": "wrangler d1 migrations apply taurikit-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply taurikit-db --remote"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250227.0",
