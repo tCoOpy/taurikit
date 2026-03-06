@@ -1,10 +1,9 @@
+import type { Sql } from "postgres";
+
 export interface Env {
-  DB: D1Database;
-  TEMPLATES: R2Bucket;
-  STRIPE_SECRET_KEY: string;
-  STRIPE_WEBHOOK_SECRET: string;
-  STRIPE_PRICE_ID: string;
-  RESEND_API_KEY: string;
+  Variables: {
+    db: Sql;
+  };
 }
 
 export interface License {
@@ -12,7 +11,7 @@ export interface License {
   email: string;
   key: string;
   plan: string;
-  active: number;
+  active: boolean;
   stripe_customer_id: string | null;
   stripe_payment_id: string | null;
   created_at: string;

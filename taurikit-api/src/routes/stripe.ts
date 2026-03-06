@@ -3,14 +3,14 @@ import Stripe from "stripe";
 import { Resend } from "resend";
 import type { Env } from "../types";
 
-export const stripeRoutes = new Hono<{ Bindings: Env }>();
+export const stripeRoutes = new Hono<Env>();
 
 stripeRoutes.post("/checkout", async (c) => {
-  const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
-    line_items: [{ price: c.env.STRIPE_PRICE_ID, quantity: 1 }],
+    line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
     success_url: "https://taurikit.dev/success?session_id={CHECKOUT_SESSION_ID}",
     cancel_url: "https://taurikit.dev/#pricing",
     payment_intent_data: {
@@ -22,7 +22,7 @@ stripeRoutes.post("/checkout", async (c) => {
 });
 
 stripeRoutes.get("/session/:sessionId", async (c) => {
-  const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const sessionId = c.req.param("sessionId");
 
   const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -36,11 +36,11 @@ stripeRoutes.get("/session/:sessionId", async (c) => {
     return c.json({ error: "No payment found" }, 404);
   }
 
-  const license = await c.env.DB.prepare(
-    "SELECT key, plan, created_at FROM licenses WHERE stripe_payment_id = ?"
-  )
-    .bind(paymentId)
-    .first<{ key: string; plan: string; created_at: string }>();
+  const db = c.get("db");
+
+  const [license] = await db<{ key: string; plan: string; created_at: string }[]>`
+    SELECT key, plan, created_at FROM licenses WHERE stripe_payment_id = ${paymentId}
+  `;
 
   if (!license) {
     return c.json({ error: "License not yet provisioned" }, 404);
@@ -50,7 +50,7 @@ stripeRoutes.get("/session/:sessionId", async (c) => {
 });
 
 stripeRoutes.post("/webhook", async (c) => {
-  const stripe = new Stripe(c.env.STRIPE_SECRET_KEY);
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const signature = c.req.header("stripe-signature");
 
   if (!signature) {
@@ -64,7 +64,7 @@ stripeRoutes.post("/webhook", async (c) => {
     event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
-      c.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch {
     return c.json({ error: "Invalid signature" }, 400);
@@ -79,21 +79,21 @@ stripeRoutes.post("/webhook", async (c) => {
     }
 
     const key = generateLicenseKey();
+    const db = c.get("db");
 
-    await c.env.DB.prepare(
-      `INSERT INTO licenses (id, email, key, plan, stripe_customer_id, stripe_payment_id)
-       VALUES (?, ?, ?, 'standard', ?, ?)`
-    )
-      .bind(
-        crypto.randomUUID(),
-        email,
-        key,
-        session.customer?.toString() ?? null,
-        session.payment_intent?.toString() ?? null
+    await db`
+      INSERT INTO licenses (id, email, key, plan, stripe_customer_id, stripe_payment_id)
+      VALUES (
+        ${crypto.randomUUID()},
+        ${email},
+        ${key},
+        'standard',
+        ${session.customer?.toString() ?? null},
+        ${session.payment_intent?.toString() ?? null}
       )
-      .run();
+    `;
 
-    const resend = new Resend(c.env.RESEND_API_KEY);
+    const resend = new Resend(process.env.RESEND_API_KEY!);
     await resend.emails.send({
       from: "TauriKit <noreply@taurikit.dev>",
       to: email,
