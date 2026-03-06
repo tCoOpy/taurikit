@@ -1,0 +1,21 @@
+{
+  "name": "taurikit-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 execute taurikit-db --local --file=schema.sql",
+    "db:migrate:remote": "wrangler d1 execute taurikit-db --remote --file=schema.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250227.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4"
+  },
+  "dependencies": {
+    "hono": "^4",
+    "resend": "^6.9.3",
+    "stripe": "^17"
+  }
+}
