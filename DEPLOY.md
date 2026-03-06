@@ -4,67 +4,62 @@ Step-by-step to get TauriKit live.
 
 ## Prerequisites
 
-- Cloudflare account (Workers, D1, R2, Pages)
+- Railway account (for API + PostgreSQL)
+- Cloudflare account (Pages — for static sites)
 - Stripe account (test or live)
 - Resend account (for email delivery)
-- GitHub repos created for `taurikit-cli`, `taurikit-api`, `taurikit-web`
-- Domain: `taurikit.dev` pointed to Cloudflare
+- Domain: `taurikit.dev`
 
 ## 1. Deploy the API (`taurikit-api`)
 
-### Create infrastructure
+### Create Railway project
 
-```sh
-cd taurikit-api
+1. Go to https://railway.com/new → **Deploy from GitHub repo** → select `tCoOpy/taurikit`
+2. Set **Root Directory** to `taurikit-api`
+3. Add a **PostgreSQL** database service (click **+ New** → **Database** → **PostgreSQL**)
+4. Railway auto-injects `DATABASE_URL` when Postgres is linked
 
-# Create D1 database
-wrangler d1 create taurikit-db
-# → Copy the database_id into wrangler.toml
+### Set environment variables
 
-# Create R2 bucket
-wrangler r2 bucket create taurikit-templates
+In Railway → your API service → **Variables**:
+
+```
+STRIPE_SECRET_KEY=sk_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_ID=price_...
+RESEND_API_KEY=re_...
+ADMIN_KEY=<generate-a-random-secret>
+PORT=3000
 ```
 
-### Configure secrets
-
-```sh
-wrangler secret put STRIPE_SECRET_KEY
-wrangler secret put STRIPE_WEBHOOK_SECRET
-wrangler secret put RESEND_API_KEY
-```
-
-### Update `wrangler.toml`
-
-Set `STRIPE_PRICE_ID` to your Stripe Price ID, and replace the D1 `database_id` placeholder.
-
-### Deploy
-
-```sh
-bun run deploy
-```
+Generate `ADMIN_KEY` with: `openssl rand -hex 32`
 
 ### Run migrations
 
-```sh
-bun run db:migrate:remote
-```
-
-### Upload template
+After first deploy, open the Railway service shell or use the Railway CLI:
 
 ```sh
-./scripts/upload-template.sh 0.1.0
+railway run bun run db:migrate
 ```
 
-### Configure custom domain
+### Upload initial template
 
-In the Cloudflare dashboard: Workers & Pages → taurikit-api → Settings → Domains & Routes → add `api.taurikit.dev`.
+```sh
+export API_URL=https://<your-railway-domain>
+export ADMIN_KEY=<your-admin-key>
+./scripts/upload-template.sh scaffold 0.1.0
+```
+
+### Custom domain
+
+Railway → API service → **Settings** → **Networking** → **Custom Domain** → add `api.taurikit.dev`
 
 ### Set up Stripe webhook
 
 In Stripe Dashboard → Webhooks → Add endpoint:
 - URL: `https://api.taurikit.dev/stripe/webhook`
 - Events: `checkout.session.completed`
-- Copy the signing secret → `wrangler secret put STRIPE_WEBHOOK_SECRET`
+- Copy the signing secret → update `STRIPE_WEBHOOK_SECRET` in Railway variables
 
 ## 2. Deploy the landing page (`taurikit-web`)
 
@@ -127,9 +122,8 @@ curl -fsSL https://taurikit.dev/setup.sh | sh
 # curl -fsSL https://taurikit.dev/install.sh | sh
 # taurikit doctor
 
-# 2. Buy a license (or insert a test key directly via D1)
-wrangler d1 execute taurikit-db --remote --command \
-  "INSERT INTO licenses (id, email, key, plan) VALUES ('test', 'test@example.com', 'TK-TEST00000000-00000000-00000000-00000000-00000000', 'standard')"
+# 2. Insert a test license directly via Railway shell or CLI:
+# railway run bun -e "import pg from 'postgres'; const s=pg(process.env.DATABASE_URL); await s\`INSERT INTO licenses (id,email,key,plan) VALUES ('test','test@example.com','TK-TEST00000000-00000000-00000000-00000000-00000000','standard')\`; await s.end()"
 
 # 3. Generate a project
 export TAURIKIT_LICENSE_KEY=TK-TEST00000000-00000000-00000000-00000000-00000000
@@ -146,11 +140,13 @@ bun tauri dev
 | Record | Type | Target |
 |--------|------|--------|
 | `taurikit.dev` | CNAME | Cloudflare Pages |
-| `api.taurikit.dev` | CNAME/Worker Route | Cloudflare Workers |
+| `api.taurikit.dev` | CNAME | Railway |
 
-## GitHub repo secrets (all repos)
+## GitHub repo secrets
 
 | Secret | Used by |
 |--------|---------|
-| `CLOUDFLARE_API_TOKEN` | API deploy, site deploy |
-| `CLOUDFLARE_ACCOUNT_ID` | API deploy, site deploy |
+| `CLOUDFLARE_API_TOKEN` | Landing page + docs deploy |
+| `CLOUDFLARE_ACCOUNT_ID` | Landing page + docs deploy |
+| `ADMIN_KEY` | Template upload workflow |
+| `API_URL` | Template upload workflow |

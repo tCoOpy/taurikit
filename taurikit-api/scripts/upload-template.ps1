@@ -4,8 +4,12 @@ param(
 )
 
 $Tarball = "taurikit-${Version}.tar.gz"
-$R2Key = "templates/${Version}.tar.gz"
 $TempFile = Join-Path $env:TEMP $Tarball
+$ApiUrl = $env:API_URL
+$AdminKey = $env:ADMIN_KEY
+
+if (-not $ApiUrl) { throw "Set API_URL env var (e.g. https://api.taurikit.dev)" }
+if (-not $AdminKey) { throw "Set ADMIN_KEY env var" }
 
 Write-Host "Packaging scaffold from ${ScaffoldDir}..."
 
@@ -18,8 +22,12 @@ tar czf $TempFile `
     --exclude='MEMORY.md' `
     base auth ui manifest.toml
 
-Write-Host "Uploading to R2 as ${R2Key}..."
-wrangler r2 object put "taurikit-templates/${R2Key}" --file=$TempFile
+Write-Host "Uploading to API as v${Version}..."
+Invoke-RestMethod `
+    -Method Post `
+    -Uri "${ApiUrl}/template/upload?version=${Version}" `
+    -Headers @{ "X-Admin-Key" = $AdminKey; "Content-Type" = "application/gzip" } `
+    -InFile $TempFile
 
 Write-Host "Done - template v${Version} uploaded."
 Remove-Item $TempFile

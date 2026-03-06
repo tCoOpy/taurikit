@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "db:migrate:local": "wrangler d1 migrations apply taurikit-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply taurikit-db --remote"
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --target=bun --outdir=dist",
+    "db:migrate": "bun src/migrate.ts"
   },
   "devDependencies": {
     "@types/node": "^25.3.5",

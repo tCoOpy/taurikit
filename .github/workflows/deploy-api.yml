@@ -1,8 +1,10 @@
-name: Deploy API
+name: Typecheck API
 
 on:
   push:
     branches: [main]
+    paths: ['taurikit-api/**']
+  pull_request:
     paths: ['taurikit-api/**']
 
 defaults:
@@ -10,7 +12,7 @@ defaults:
     working-directory: taurikit-api
 
 jobs:
-  deploy:
+  typecheck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +25,5 @@ jobs:
 
       - run: bunx tsc --noEmit
 
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          workingDirectory: taurikit-api
+# Railway auto-deploys on push to main via GitHub integration.
+# No deploy step needed here.

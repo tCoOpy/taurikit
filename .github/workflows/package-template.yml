@@ -26,8 +26,11 @@ jobs:
             --exclude='MEMORY.md' \
             base auth ui manifest.toml
 
-      - name: Upload to R2
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: r2 object put "taurikit-templates/templates/${{ steps.version.outputs.version }}.tar.gz" --file="taurikit-${{ steps.version.outputs.version }}.tar.gz"
+      - name: Upload to API
+        run: |
+          curl -fsSL \
+            -X POST \
+            -H "X-Admin-Key: ${{ secrets.ADMIN_KEY }}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary "@taurikit-${{ steps.version.outputs.version }}.tar.gz" \
+            "${{ secrets.API_URL }}/template/upload?version=${{ steps.version.outputs.version }}"
