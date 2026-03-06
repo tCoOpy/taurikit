@@ -1,0 +1,33 @@
+name: Package Template
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Package scaffold
+        run: |
+          tar czf "taurikit-${{ steps.version.outputs.version }}.tar.gz" \
+            -C scaffold \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='target' \
+            --exclude='.claude' \
+            --exclude='MEMORY.md' \
+            base auth ui manifest.toml
+
+      - name: Upload to R2
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: r2 object put "taurikit-templates/templates/${{ steps.version.outputs.version }}.tar.gz" --file="taurikit-${{ steps.version.outputs.version }}.tar.gz"
