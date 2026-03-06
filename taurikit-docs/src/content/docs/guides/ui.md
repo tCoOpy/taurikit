@@ -1,0 +1,64 @@
+---
+title: UI Frameworks
+description: Choose between shadcn/ui and DaisyUI for your app's component library.
+---
+
+TauriKit supports two UI frameworks. You choose one during project generation with `--ui <framework>`.
+
+## shadcn/ui
+
+[shadcn/ui](https://ui.shadcn.com/) provides accessible, composable React components built on Radix UI primitives and styled with Tailwind CSS.
+
+### What's included
+
+The generated app ships with these pre-configured shadcn/ui components:
+
+- `Avatar` — user profile images
+- `Badge` — status indicators
+- `Button` — primary actions
+- `Card` — content containers
+- `Dialog` — modal dialogs (used for settings)
+- `DropdownMenu` — context menus
+- `Input` — text fields
+- `ScrollArea` — scrollable containers
+- `Separator` — visual dividers
+- `Switch` — toggle controls
+- `Tooltip` — hover hints
+
+### Adding more components
+
+```sh
+bunx shadcn@latest add [component-name]
+```
+
+Components are generated into `src/components/ui/`.
+
+### Customization
+
+Theming is controlled via CSS variables in `src/index.css`. The default theme uses a dark zinc palette.
+
+## DaisyUI
+
+[DaisyUI](https://daisyui.com/) adds semantic component classes to Tailwind CSS — no extra JavaScript, just utility classes.
+
+### What's included
+
+DaisyUI is configured as a Tailwind plugin with the `dark` theme. Components like buttons, cards, inputs, modals, and toggles use DaisyUI class names (`btn`, `card`, `input`, `modal`, `toggle`).
+
+### Adding components
+
+No installation required — all [DaisyUI components](https://daisyui.com/components/) are available via class names:
+
+```tsx
+<button className="btn btn-primary">Click me</button>
+```
+
+### Theming
+
+Change the theme in `tailwind.config.js`:
+
+```js
+daisyui: {
+  themes: ["dark", "light", "cyberpunk"],
+}
+```

@@ -1,0 +1,34 @@
+---
+title: TauriKit Documentation
+description: Generate production-ready Rust Tauri v2 desktop apps in seconds.
+template: splash
+hero:
+  tagline: A CLI that generates production-ready Rust Tauri v2 desktop applications with auth, settings, auto-updates, and polished UI — all wired up and ready to ship.
+  actions:
+    - text: Get Started
+      link: /getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: CLI Reference
+      link: /reference/cli/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What's included
+
+<CardGrid>
+  <Card title="Authentication" icon="approve-check-circle">
+    GitHub Device Flow, Google OAuth (PKCE loopback), or no auth — pick one and it's wired into your app.
+  </Card>
+  <Card title="UI Framework" icon="puzzle">
+    Choose shadcn/ui or DaisyUI. Components, theming, and layouts are pre-configured.
+  </Card>
+  <Card title="Auto-Updates" icon="rocket">
+    Built-in Tauri updater with download progress, version display, and one-click install.
+  </Card>
+  <Card title="Settings & State" icon="setting">
+    Persistent settings via Tauri plugin-store with a Zustand-powered React store.
+  </Card>
+</CardGrid>
