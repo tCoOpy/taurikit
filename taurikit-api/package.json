@@ -9,12 +9,13 @@
     "db:migrate:remote": "wrangler d1 migrations apply taurikit-db --remote"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250227.0",
-    "typescript": "^5.9.3",
-    "wrangler": "^4"
+    "@types/node": "^25.3.5",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@hono/node-server": "^1.19.11",
     "hono": "^4",
+    "postgres": "^3.4.8",
     "resend": "^6.9.3",
     "stripe": "^17"
   }
