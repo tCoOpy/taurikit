@@ -1,14 +1,10 @@
 # Dependencies
 node_modules/
-bun.lock
 
 # Build outputs
 target/
 dist/
 .astro/
-
-# Rust
-Cargo.lock
 
 # Environment
 .env

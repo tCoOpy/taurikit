@@ -7,7 +7,7 @@ compatibility_date = "2025-03-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "taurikit-db"
-database_id = "placeholder-replace-after-create"
+database_id = "f750bd92-b86e-49c8-acc9-1beea2249821"
 migrations_dir = "migrations"
 
 [[r2_buckets]]

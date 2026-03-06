@@ -101,47 +101,41 @@ git push origin main --tags
 
 The release workflow builds binaries for all platforms and creates a GitHub Release.
 
-### Verify install scripts
+### Verify setup wizard
 
 ```sh
-# macOS/Linux
-curl -fsSL https://taurikit.dev/install.sh | sh
+# macOS/Linux — installs CLI + launches interactive wizard
+curl -fsSL https://taurikit.dev/setup.sh | sh
 
-# Windows
-irm https://taurikit.dev/install.ps1 | iex
+# Windows (PowerShell)
+irm https://taurikit.dev/setup.ps1 | iex
 ```
 
-The install scripts download from GitHub Releases, so the release must exist first.
+The scripts download the CLI from GitHub Releases (release must exist first), then immediately launch `taurikit new`.
 
-### Host install scripts
+CLI-only install scripts are also available at `taurikit.dev/install.sh` and `taurikit.dev/install.ps1`.
 
-Upload `install.sh` and `install.ps1` to the landing page's `public/` directory so they're served from `taurikit.dev/install.sh`.
-
-```sh
-cp taurikit-cli/install.sh taurikit-web/public/install.sh
-cp taurikit-cli/install.ps1 taurikit-web/public/install.ps1
-```
-
-Then redeploy the landing page.
+All scripts live in `taurikit-web/public/` and are served automatically by the landing page.
 
 ## 4. End-to-end verification
 
 ```sh
-# 1. Install CLI
-curl -fsSL https://taurikit.dev/install.sh | sh
+# 1. Run setup wizard (installs CLI + launches project generator)
+curl -fsSL https://taurikit.dev/setup.sh | sh
 
-# 2. Check prerequisites
-taurikit doctor
+# Or install CLI only, then run separately:
+# curl -fsSL https://taurikit.dev/install.sh | sh
+# taurikit doctor
 
-# 3. Buy a license (or insert a test key directly via D1)
+# 2. Buy a license (or insert a test key directly via D1)
 wrangler d1 execute taurikit-db --remote --command \
   "INSERT INTO licenses (id, email, key, plan) VALUES ('test', 'test@example.com', 'TK-TEST00000000-00000000-00000000-00000000-00000000', 'standard')"
 
-# 4. Generate a project
+# 3. Generate a project
 export TAURIKIT_LICENSE_KEY=TK-TEST00000000-00000000-00000000-00000000-00000000
 taurikit new "Test App" --auth github --ui shadcn --yes
 
-# 5. Run it
+# 4. Run it
 cd test-app
 bun install
 bun tauri dev

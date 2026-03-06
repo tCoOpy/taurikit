@@ -179,18 +179,19 @@ import Layout from "../layouts/Layout.astro";
         <div class="flex gap-6 items-start">
           <div class="w-10 h-10 shrink-0 rounded-full bg-orange-600 flex items-center justify-center font-bold">1</div>
           <div>
-            <h3 class="text-xl font-semibold mb-1">Install the CLI</h3>
+            <h3 class="text-xl font-semibold mb-1">Run the setup wizard</h3>
             <div class="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 font-mono text-sm mt-2">
-              <span class="text-zinc-500">$</span> curl -fsSL https://taurikit.dev/install.sh | sh
+              <span class="text-zinc-500">$</span> curl -fsSL https://taurikit.dev/setup.sh | sh
             </div>
+            <p class="text-zinc-400 text-sm mt-2">Installs the CLI and launches the interactive project wizard.</p>
           </div>
         </div>
         <div class="flex gap-6 items-start">
           <div class="w-10 h-10 shrink-0 rounded-full bg-orange-600 flex items-center justify-center font-bold">2</div>
           <div>
-            <h3 class="text-xl font-semibold mb-1">Generate your project</h3>
+            <h3 class="text-xl font-semibold mb-1">Pick your stack</h3>
             <div class="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 font-mono text-sm mt-2">
-              <span class="text-zinc-500">$</span> taurikit new <span class="text-green-400">"My App"</span>
+              <span class="text-zinc-500">?</span> Auth provider: <span class="text-green-400">GitHub</span> · UI framework: <span class="text-green-400">shadcn</span>
             </div>
             <p class="text-zinc-400 text-sm mt-2">Choose your auth provider and UI framework interactively.</p>
           </div>

@@ -1,13 +1,39 @@
 $ErrorActionPreference = "Stop"
 
+# Usage:
+#   irm https://taurikit.dev/setup.ps1 | iex
+#   After install: taurikit new --license-key TK-xxxx
+#
+# Or with license key in environment:
+#   $env:TAURIKIT_LICENSE_KEY = "TK-xxxx"; irm https://taurikit.dev/setup.ps1 | iex
+
 $Repo = "tCoOpy/taurikit"
 $BinName = "taurikit.exe"
 $InstallDir = if ($env:TAURIKIT_INSTALL_DIR) { $env:TAURIKIT_INSTALL_DIR } else { Join-Path $HOME ".taurikit\bin" }
 
 function Main {
-    $arch = Get-Arch
-    $target = "x86_64-pc-windows-msvc"
+    $existing = Get-Command "taurikit" -ErrorAction SilentlyContinue
+    if ($existing) {
+        Write-Host "taurikit already installed: $($existing.Source)"
+    } else {
+        Install-Cli
+    }
 
+    Write-Host "`nStarting project wizard...`n"
+
+    $exe = Join-Path $InstallDir $BinName
+    $wizardArgs = @("new")
+
+    if ($env:TAURIKIT_LICENSE_KEY) {
+        $wizardArgs += "--license-key"
+        $wizardArgs += $env:TAURIKIT_LICENSE_KEY
+    }
+
+    & $exe @wizardArgs
+}
+
+function Install-Cli {
+    $target = "x86_64-pc-windows-msvc"
     $version = if ($env:TAURIKIT_VERSION) { $env:TAURIKIT_VERSION } else { Get-LatestVersion }
 
     Write-Host "Installing taurikit $version ($target)..."
@@ -32,21 +58,10 @@ function Main {
         Move-Item -Path $src -Destination $dst -Force
 
         Write-Host "  Installed to $dst"
-
         Add-ToPath $InstallDir
-        Write-Host "Done. Run 'taurikit --help' to get started."
     }
     finally {
         Remove-Item -Path $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
-    }
-}
-
-function Get-Arch {
-    $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-    switch ($arch) {
-        "X64"   { return "x86_64" }
-        "Arm64" { return "aarch64" }
-        default { throw "Unsupported architecture: $arch" }
     }
 }
 
@@ -66,7 +81,7 @@ function Add-ToPath {
 
     [Environment]::SetEnvironmentVariable("PATH", "$Dir;$userPath", "User")
     $env:PATH = "$Dir;$env:PATH"
-    Write-Host "  Added $Dir to user PATH (restart your terminal to use 'taurikit' globally)"
+    Write-Host "  Added $Dir to user PATH"
 }
 
 Main

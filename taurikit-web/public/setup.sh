@@ -1,11 +1,25 @@
 #!/bin/sh
 set -eu
 
+# Usage: curl -fsSL https://taurikit.dev/setup.sh | sh
+#   or:  curl -fsSL https://taurikit.dev/setup.sh | sh -s -- --license-key TK-xxxx
+
 REPO="tCoOpy/taurikit"
 BIN_NAME="taurikit"
 INSTALL_DIR="${TAURIKIT_INSTALL_DIR:-$HOME/.taurikit/bin}"
 
 main() {
+    if command -v "$BIN_NAME" > /dev/null 2>&1; then
+        printf "taurikit already installed: %s\n" "$(command -v "$BIN_NAME")"
+    else
+        install_cli
+    fi
+
+    printf "\nStarting project wizard...\n\n"
+    exec "${INSTALL_DIR}/${BIN_NAME}" new "$@"
+}
+
+install_cli() {
     need_cmd curl
     need_cmd tar
     need_cmd uname
@@ -36,12 +50,9 @@ main() {
     printf "  Installed to %s/%s\n" "$INSTALL_DIR" "$BIN_NAME"
 
     if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
-        printf "\n  Add taurikit to your PATH:\n"
-        printf "    export PATH=\"%s:\$PATH\"\n\n" "$INSTALL_DIR"
+        export PATH="${INSTALL_DIR}:$PATH"
         add_to_shell_profile "$INSTALL_DIR"
     fi
-
-    printf "Done. Run 'taurikit --help' to get started.\n"
 }
 
 detect_os() {
@@ -81,7 +92,7 @@ add_to_shell_profile() {
 
     if [ -n "$profile" ] && ! grep -qF "$dir" "$profile" 2>/dev/null; then
         printf "\n# TauriKit\n%s\n" "$line" >> "$profile"
-        printf "  Added to %s (restart your shell or run: source %s)\n" "$profile" "$profile"
+        printf "  Added to %s\n" "$profile"
     fi
 }
 

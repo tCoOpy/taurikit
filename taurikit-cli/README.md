@@ -2,23 +2,32 @@
 
 A generator that creates production-ready Rust Tauri v2 desktop apps from a modular template system.
 
-## Install
+## Quick Start
+
+One command to install the CLI and launch the interactive project wizard:
 
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://taurikit.dev/install.sh | sh
+curl -fsSL https://taurikit.dev/setup.sh | sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://taurikit.dev/install.ps1 | iex
+irm https://taurikit.dev/setup.ps1 | iex
 ```
 
-**From source:**
+## Install (CLI only)
 
 ```sh
+# macOS / Linux
+curl -fsSL https://taurikit.dev/install.sh | sh
+
+# Windows (PowerShell)
+irm https://taurikit.dev/install.ps1 | iex
+
+# From source
 cargo install --path .
 ```
 
