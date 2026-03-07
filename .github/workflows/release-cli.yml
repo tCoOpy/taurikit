@@ -14,17 +14,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary: taurikit
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             binary: taurikit
             linker: aarch64-linux-gnu-gcc
-          - os: macos-15
+          - os: macos-latest
             target: x86_64-apple-darwin
             binary: taurikit
-          - os: macos-15
+          - os: macos-latest
             target: aarch64-apple-darwin
             binary: taurikit
           - os: windows-latest

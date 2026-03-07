@@ -17,10 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-latest
             asset: taurikit-x86_64-unknown-linux-gnu.tar.gz
             binary: taurikit
-          - os: macos-15
+          - os: macos-latest
             asset: taurikit-aarch64-apple-darwin.tar.gz
             binary: taurikit
           - os: windows-latest
@@ -66,17 +66,25 @@ jobs:
           fi
           chmod +x "${{ matrix.binary }}" 2>/dev/null || true
 
-      - name: Generate test app
-        shell: bash
+      - name: Generate test app (Unix)
+        if: runner.os != 'Windows'
         run: |
-          ./"${{ matrix.binary }}" new "TestApp" \
-            --auth none \
-            --ui shadcn \
-            --template ./scaffold \
-            --yes \
-            --no-git \
-            --no-install \
-            --output ./test-output
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            script -q /dev/null ./"${{ matrix.binary }}" new "TestApp" \
+              --auth none --ui shadcn --template ./scaffold \
+              --yes --no-git --no-install --output ./test-output
+          else
+            script -qec './"${{ matrix.binary }}" new "TestApp" \
+              --auth none --ui shadcn --template ./scaffold \
+              --yes --no-git --no-install --output ./test-output' /dev/null
+          fi
+
+      - name: Generate test app (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          .\${{ matrix.binary }} new "TestApp" `
+            --auth none --ui shadcn --template ./scaffold `
+            --yes --no-git --no-install --output ./test-output
 
       - name: Install frontend dependencies
         working-directory: test-output
