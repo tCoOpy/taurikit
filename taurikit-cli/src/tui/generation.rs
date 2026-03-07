@@ -181,7 +181,7 @@ impl GenerationView {
         let chunks = Layout::vertical([
             Constraint::Length(3),
             Constraint::Length(1),
-            Constraint::Min(8),
+            Constraint::Min(12),
             Constraint::Length(1),
             Constraint::Length(3),
         ])
@@ -257,20 +257,19 @@ impl GenerationView {
     }
 
     fn render_ferris(&self, frame: &mut ratatui::Frame, area: Rect) {
-        let art = if self.celebrating {
-            ferris::celebrate()
-        } else {
-            ferris::frame_at(self.tick / 3)
-        };
+        let bob = ferris::bob_offset(self.tick, self.celebrating);
 
-        let ferris_text = Text::from(
-            art.lines()
-                .map(|l| Line::from(Span::styled(l, theme::ferris_style())))
-                .collect::<Vec<_>>(),
-        );
+        let mut lines: Vec<Line> = Vec::new();
+        for _ in 0..bob {
+            lines.push(Line::raw(""));
+        }
+        for (i, l) in ferris::ART.lines().enumerate() {
+            let color = ferris::line_color(i, self.tick, self.celebrating);
+            lines.push(Line::from(Span::styled(l, Style::default().fg(color))));
+        }
 
         frame.render_widget(
-            Paragraph::new(ferris_text)
+            Paragraph::new(Text::from(lines))
                 .alignment(Alignment::Center)
                 .wrap(Wrap { trim: false })
                 .style(Style::default().bg(theme::BG)),

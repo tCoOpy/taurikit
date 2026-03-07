@@ -43,10 +43,6 @@ pub fn text() -> Style {
     Style::default().fg(TEXT)
 }
 
-pub fn ferris_style() -> Style {
-    Style::default().fg(ORANGE)
-}
-
 pub fn border() -> Style {
     Style::default().fg(Color::Rgb(60, 60, 80))
 }

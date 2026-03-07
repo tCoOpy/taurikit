@@ -1,48 +1,49 @@
-pub const FRAME_COUNT: usize = 4;
-pub const CELEBRATE_FRAME: usize = 4;
+use ratatui::style::Color;
 
-const FRAMES: [&str; 5] = [
-    // Frame 0: idle
-    r#"
-    _~^~^~_
-  \) /  o o\ (/
-    '_   -  _'
-    / '-----' \
- "#,
-    // Frame 1: working – left claw up
-    r#"
-    _~^~^~_
- \)  /  o o\ /
-    '_   -  _'
-    / '-----' \
- "#,
-    // Frame 2: idle alt
-    r#"
-    _~^~^~_
-  \) /  o o\ (/
-    '_   ~  _'
-    / '-----' \
- "#,
-    // Frame 3: working – right claw up
-    r#"
-    _~^~^~_
-   \ /  o o\  (/
-    '_   -  _'
-    / '-----' \
- "#,
-    // Frame 4: celebrating – both claws up
-    r#"
-    _~^~^~_
- \)  /  ^ ^\  (/
-    '_   ▽  _'
-    / '-----' \
- "#,
+pub const ART: &str = r#"
+⠀⠀⣠⠤⠖⠒⠦⢤⡀⠀⠀⠀⠀⠀⠀⢀⠤⠴⠒⠢⠤⣀⠀⠀
+⠀⣼⠁⠀⠀⡠⢖⡉⠁⠀⠀⠀⠀⠀⠀⠈⢙⡲⣄⠀⠀⠈⣇⠀
+⠀⣟⣄⠀⠐⠓⢋⡇⠀⠀⠀⠀⠀⠀⠀⠀⢹⡙⠚⠀⠀⡠⣻⠀
+⠀⠈⡶⢭⣒⡺⠟⣀⣰⣿⠦⠤⠤⢼⣿⣆⡈⠻⢖⣒⡭⡾⠁⠀
+⠀⠀⠱⡘⢄⡰⠊⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⣄⡰⣃⠇⠀⠀
+⠀⣀⠤⠬⢽⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡯⠥⠤⡀⠀
+⠰⠕⢋⡭⠿⡟⢄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡠⣻⠯⢭⡙⠺⠆
+⠀⢰⡳⠊⡩⠛⣦⡉⠒⠤⠤⠄⠤⠤⠤⠒⢉⣔⠛⢍⠓⣝⡄⠀
+⠀⠈⠁⡼⡴⠉⠀⠈⠓⠲⠤⠤⠤⠤⠖⠚⠁⠈⠉⣎⣧⠈⠁⠀
+⠀⠀⠀⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀
+"#;
+
+const WAVE_PALETTE: [Color; 6] = [
+    Color::Rgb(255, 140, 50),  // orange
+    Color::Rgb(255, 170, 60),
+    Color::Rgb(255, 200, 80),
+    Color::Rgb(255, 170, 60),
+    Color::Rgb(255, 140, 50),
+    Color::Rgb(230, 120, 40),
 ];
 
-pub fn frame_at(tick: usize) -> &'static str {
-    &FRAMES[tick % FRAME_COUNT]
+const CELEBRATE_PALETTE: [Color; 6] = [
+    Color::Rgb(80, 220, 100),  // green
+    Color::Rgb(80, 200, 255),  // cyan
+    Color::Rgb(255, 140, 50),  // orange
+    Color::Rgb(255, 220, 60),  // yellow
+    Color::Rgb(80, 220, 100),
+    Color::Rgb(80, 200, 255),
+];
+
+pub fn line_color(line_idx: usize, tick: usize, celebrating: bool) -> Color {
+    let palette = if celebrating { &CELEBRATE_PALETTE } else { &WAVE_PALETTE };
+    let offset = tick / 2;
+    palette[(line_idx + offset) % palette.len()]
 }
 
-pub fn celebrate() -> &'static str {
-    &FRAMES[CELEBRATE_FRAME]
+pub fn bob_offset(tick: usize, celebrating: bool) -> u16 {
+    if celebrating {
+        return 0;
+    }
+    match (tick / 4) % 4 {
+        0 | 2 => 0,
+        1 => 1,
+        _ => 0,
+    }
 }
