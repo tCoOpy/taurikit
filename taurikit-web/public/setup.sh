@@ -24,7 +24,7 @@ main() {
     fi
 
     printf "\nStarting project wizard...\n\n"
-    exec "${INSTALL_DIR}/${BIN_NAME}" new "$@"
+    exec "${INSTALL_DIR}/${BIN_NAME}" new "$@" < /dev/tty
 }
 
 get_installed_version() {
