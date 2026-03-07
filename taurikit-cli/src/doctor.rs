@@ -2,6 +2,7 @@ use std::fmt;
 use std::process::{Command, Stdio};
 
 use anyhow::Result;
+use colored::Colorize;
 
 #[derive(Clone, Copy)]
 enum Status {
@@ -28,11 +29,13 @@ struct Check {
 
 pub fn run() -> Result<()> {
     println!();
+    crate::tui::banner::print_inline_banner();
+    crate::tui::banner::print_inline_separator();
     println!(
-        "TauriKit Doctor v{}",
-        env!("CARGO_PKG_VERSION")
+        "  {}",
+        format!("Doctor v{}", env!("CARGO_PKG_VERSION")).truecolor(255, 191, 0)
     );
-    println!("{}", "─".repeat(50));
+    println!();
 
     let checks = vec![
         check_rust(),
@@ -50,27 +53,57 @@ pub fn run() -> Result<()> {
     let mut issues = 0u32;
 
     for c in &checks {
-        let marker = match c.status {
-            Status::Ok => "✓",
-            Status::Warning => "!",
-            Status::Missing => "✗",
-        };
-        println!("  {} {}: {}", marker, c.name, c.detail);
-        if matches!(c.status, Status::Missing) {
-            issues += 1;
+        match c.status {
+            Status::Ok => {
+                println!(
+                    "  {} {}: {}",
+                    "✓".truecolor(80, 220, 100).bold(),
+                    c.name.truecolor(220, 220, 230),
+                    c.detail.truecolor(100, 100, 120)
+                );
+            }
+            Status::Warning => {
+                println!(
+                    "  {} {}: {}",
+                    "!".truecolor(255, 220, 60).bold(),
+                    c.name.truecolor(255, 220, 60),
+                    c.detail.truecolor(180, 180, 190)
+                );
+            }
+            Status::Missing => {
+                println!(
+                    "  {} {}: {}",
+                    "✗".truecolor(240, 70, 70).bold(),
+                    c.name.truecolor(240, 70, 70),
+                    c.detail.truecolor(240, 70, 70)
+                );
+                issues += 1;
+            }
         }
     }
 
-    println!("{}", "─".repeat(50));
+    println!();
+    crate::tui::banner::print_inline_separator();
     if issues == 0 {
-        println!("  All checks passed. You're ready to build!");
+        println!(
+            "  {}",
+            "🦀 All checks passed. You're ready to build!"
+                .truecolor(80, 220, 100)
+                .bold()
+        );
     } else {
         println!(
-            "  {} issue{} found. Install missing dependencies before running `taurikit new`.",
-            issues,
-            if issues == 1 { "" } else { "s" }
+            "  {}",
+            format!(
+                "{} issue{} found. Install missing dependencies before running `taurikit new`.",
+                issues,
+                if issues == 1 { "" } else { "s" }
+            )
+            .truecolor(240, 70, 70)
+            .bold()
         );
     }
+    crate::tui::banner::print_inline_separator();
     println!();
 
     Ok(())

@@ -47,6 +47,8 @@ fn run_cmd(program: &str, args: &[&str], dir: &Path, label: &str) -> Result<()> 
     let status = Command::new(program)
         .args(args)
         .current_dir(dir)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .with_context(|| format!("Failed to run `{label}` — is `{program}` installed?"))?;
 

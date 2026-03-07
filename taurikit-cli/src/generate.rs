@@ -3,11 +3,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
+use colored::Colorize;
 use inquire::{Select, Text};
 use walkdir::WalkDir;
 
 use crate::overlay;
 use crate::tokens::{self, TokenMap};
+use crate::tui::banner;
+use crate::tui::generation::{Step, StepStatus, WorkerMsg};
 use crate::license;
 
 pub struct Config {
@@ -32,8 +35,9 @@ const UI_OPTIONS: &[&str] = &["shadcn", "daisyui"];
 
 pub fn run(config: Config) -> Result<()> {
     println!();
-    println!("TauriKit v{} — Rust Tauri Desktop App Starter", env!("CARGO_PKG_VERSION"));
-    println!("{}", "─".repeat(50));
+    banner::print_inline_banner();
+    banner::print_inline_separator();
+    println!();
 
     let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
@@ -49,94 +53,167 @@ pub fn run(config: Config) -> Result<()> {
         );
     }
 
-    println!("\n  Modules: auth={auth_module}, ui={ui_module}");
-    println!("  Generating project...");
-
     let base_dir = template.join("base");
     if !base_dir.is_dir() {
         anyhow::bail!("Template missing 'base/' directory at {}", base_dir.display());
     }
-    copy_overlay(&base_dir, &output)?;
-    println!("  ✓ Copied base template");
 
-    let auth_dir = template.join("auth").join(&auth_module);
-    if auth_dir.is_dir() {
-        copy_overlay(&auth_dir, &output)?;
-        println!("  ✓ Applied auth/{auth_module} overlay");
+    println!(
+        "\n  {} auth={}, ui={}",
+        "Modules:".truecolor(255, 191, 0),
+        auth_module.truecolor(80, 200, 255).bold(),
+        ui_module.truecolor(80, 200, 255).bold()
+    );
+    println!();
+
+    let no_git = config.no_git;
+    let no_install = config.no_install;
+
+    let mut steps = vec![
+        Step { label: "Copy base template".into(), status: StepStatus::Running },
+        Step { label: format!("Apply auth/{auth_module} overlay"), status: StepStatus::Pending },
+        Step { label: format!("Apply ui/{ui_module} overlay"), status: StepStatus::Pending },
+        Step { label: "Process tokens & markers".into(), status: StepStatus::Pending },
+        Step { label: "Merge npm dependencies".into(), status: StepStatus::Pending },
+        Step { label: "Write env & manifest".into(), status: StepStatus::Pending },
+        Step { label: "Initialize git repository".into(), status: StepStatus::Pending },
+        Step { label: "Install frontend dependencies".into(), status: StepStatus::Pending },
+    ];
+
+    if no_git {
+        steps[6].status = StepStatus::Skipped;
+    }
+    if no_install {
+        steps[7].status = StepStatus::Skipped;
     }
 
-    let ui_dir = template.join("ui").join(&ui_module);
-    if ui_dir.is_dir() {
-        copy_overlay(&ui_dir, &output)?;
-        println!("  ✓ Applied ui/{ui_module} overlay");
-    }
+    let auth_module_c = auth_module.clone();
+    let ui_module_c = ui_module.clone();
+    let output_c = output.clone();
+    let token_map_c = token_map.clone();
+    let oauth_id_c = oauth_client_id.clone();
 
-    let auth_config = overlay::load_module_config(&auth_dir.join("module.json"))?;
-    let ui_config = overlay::load_module_config(&ui_dir.join("module.json"))?;
+    crate::tui::generation::run_generation(&slug, steps, move |tx| {
+        copy_overlay(&base_dir, &output_c)?;
+        tx.send(WorkerMsg::StepDone(0)).ok();
 
-    let mut all_markers = HashMap::new();
-    for (k, v) in &auth_config.markers {
-        all_markers.insert(k.clone(), v.clone());
-    }
-    for (k, v) in &ui_config.markers {
-        all_markers.insert(k.clone(), v.clone());
-    }
-
-    let processed = process_output(&output, &all_markers, &token_map)?;
-    println!("  ✓ Processed tokens and markers in {processed} files");
-
-    overlay::merge_package_deps(
-        &output.join("package.json"),
-        &[&auth_config, &ui_config],
-    )?;
-    println!("  ✓ Merged npm dependencies");
-
-    write_env_file(&output, &auth_module, oauth_client_id.as_deref())?;
-    write_manifest(&output, &token_map, &auth_module, &ui_module)?;
-
-    if !config.no_git {
-        print!("  Initializing git repository...");
-        match crate::hooks::git_init(&output) {
-            Ok(()) => println!(" done"),
-            Err(e) => println!(" skipped ({})", e),
+        let auth_dir = template.join("auth").join(&auth_module_c);
+        if auth_dir.is_dir() {
+            copy_overlay(&auth_dir, &output_c)?;
         }
-    }
+        tx.send(WorkerMsg::StepDone(1)).ok();
 
-    if !config.no_install {
-        print!("  Installing frontend dependencies...");
-        match crate::hooks::install_deps(&output) {
-            Ok(()) => println!(" done"),
-            Err(e) => println!(" skipped ({})", e),
+        let ui_dir = template.join("ui").join(&ui_module_c);
+        if ui_dir.is_dir() {
+            copy_overlay(&ui_dir, &output_c)?;
         }
-    }
+        tx.send(WorkerMsg::StepDone(2)).ok();
+
+        let auth_config = overlay::load_module_config(&auth_dir.join("module.json"))?;
+        let ui_config = overlay::load_module_config(&ui_dir.join("module.json"))?;
+
+        let mut all_markers = HashMap::new();
+        for (k, v) in &auth_config.markers {
+            all_markers.insert(k.clone(), v.clone());
+        }
+        for (k, v) in &ui_config.markers {
+            all_markers.insert(k.clone(), v.clone());
+        }
+
+        process_output(&output_c, &all_markers, &token_map_c)?;
+        tx.send(WorkerMsg::StepDone(3)).ok();
+
+        overlay::merge_package_deps(
+            &output_c.join("package.json"),
+            &[&auth_config, &ui_config],
+        )?;
+        tx.send(WorkerMsg::StepDone(4)).ok();
+
+        write_env_file(&output_c, &auth_module_c, oauth_id_c.as_deref())?;
+        write_manifest(&output_c, &token_map_c, &auth_module_c, &ui_module_c)?;
+        tx.send(WorkerMsg::StepDone(5)).ok();
+
+        if !no_git {
+            match crate::hooks::git_init(&output_c) {
+                Ok(()) => tx.send(WorkerMsg::StepDone(6)).ok(),
+                Err(_) => tx.send(WorkerMsg::StepSkipped(6)).ok(),
+            };
+        }
+
+        if !no_install {
+            match crate::hooks::install_deps(&output_c) {
+                Ok(()) => tx.send(WorkerMsg::StepDone(7)).ok(),
+                Err(_) => tx.send(WorkerMsg::StepSkipped(7)).ok(),
+            };
+        }
+
+        tx.send(WorkerMsg::AllDone).ok();
+        Ok(())
+    })?;
 
     let needs_oauth = matches!(auth_module.as_str(), "github" | "google") && oauth_client_id.is_none();
 
     println!();
-    println!("{}", "─".repeat(50));
-    println!(" Project ready at ./{slug}");
+    banner::print_inline_separator();
+    println!(
+        " {} ./{slug}",
+        "🦀 Project ready at".truecolor(80, 220, 100).bold()
+    );
     println!();
-    println!(" Next steps:");
-    println!("   cd {slug}");
+    println!(" {}", "Next steps:".truecolor(255, 191, 0).bold());
+    println!("   {}", format!("cd {slug}").truecolor(220, 220, 230));
     if needs_oauth {
         match auth_module.as_str() {
             "github" => {
-                println!("   # Set up GitHub OAuth:");
-                println!("   #   1. Go to https://github.com/settings/developers");
-                println!("   #   2. Create an OAuth App (callback URL can be blank)");
-                println!("   #   3. Copy Client ID into .env as GITHUB_CLIENT_ID");
+                println!(
+                    "   {}",
+                    "# Set up GitHub OAuth:".truecolor(255, 220, 60)
+                );
+                println!(
+                    "   {}",
+                    "#   1. Go to https://github.com/settings/developers"
+                        .truecolor(180, 180, 190)
+                );
+                println!(
+                    "   {}",
+                    "#   2. Create an OAuth App (callback URL can be blank)"
+                        .truecolor(180, 180, 190)
+                );
+                println!(
+                    "   {}",
+                    "#   3. Copy Client ID into .env as GITHUB_CLIENT_ID"
+                        .truecolor(180, 180, 190)
+                );
             }
             "google" => {
-                println!("   # Set up Google OAuth:");
-                println!("   #   1. Go to https://console.cloud.google.com/apis/credentials");
-                println!("   #   2. Create a Desktop app credential");
-                println!("   #   3. Copy Client ID into .env as GOOGLE_CLIENT_ID");
+                println!(
+                    "   {}",
+                    "# Set up Google OAuth:".truecolor(255, 220, 60)
+                );
+                println!(
+                    "   {}",
+                    "#   1. Go to https://console.cloud.google.com/apis/credentials"
+                        .truecolor(180, 180, 190)
+                );
+                println!(
+                    "   {}",
+                    "#   2. Create a Desktop app credential"
+                        .truecolor(180, 180, 190)
+                );
+                println!(
+                    "   {}",
+                    "#   3. Copy Client ID into .env as GOOGLE_CLIENT_ID"
+                        .truecolor(180, 180, 190)
+                );
             }
             _ => {}
         }
     }
-    println!("   bun tauri dev");
-    println!("{}", "─".repeat(50));
+    println!(
+        "   {}",
+        "bun tauri dev".truecolor(80, 200, 255).bold()
+    );
+    banner::print_inline_separator();
     println!();
 
     Ok(())
@@ -378,9 +455,7 @@ fn write_env_file(output: &Path, auth_module: &str, client_id: Option<&str>) -> 
                 _ => content,
             };
             fs::write(&env, content)?;
-            println!("  ✓ Created .env (OAuth configured)");
         } else {
-            println!("  ✓ Created .env");
         }
     }
     Ok(())

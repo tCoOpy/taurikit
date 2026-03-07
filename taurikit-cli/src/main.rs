@@ -4,6 +4,7 @@ mod hooks;
 mod license;
 mod overlay;
 mod tokens;
+mod tui;
 
 use std::path::PathBuf;
 

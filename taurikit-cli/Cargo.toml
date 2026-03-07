@@ -19,6 +19,9 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 flate2 = "1"
 tar = "0.4"
 dirs = "6"
+ratatui = "0.29"
+crossterm = "0.28"
+colored = "2"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55"
