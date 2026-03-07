@@ -5,8 +5,21 @@ import type { Env } from "../types";
 
 export const stripeRoutes = new Hono<Env>();
 
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("STRIPE_SECRET_KEY not configured");
+  return new Stripe(key);
+}
+
+stripeRoutes.use("/*", async (c, next) => {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return c.json({ error: "Stripe not configured" }, 503);
+  }
+  await next();
+});
+
 stripeRoutes.post("/checkout", async (c) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -22,7 +35,7 @@ stripeRoutes.post("/checkout", async (c) => {
 });
 
 stripeRoutes.get("/session/:sessionId", async (c) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const stripe = getStripe();
   const sessionId = c.req.param("sessionId");
 
   const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -50,7 +63,7 @@ stripeRoutes.get("/session/:sessionId", async (c) => {
 });
 
 stripeRoutes.post("/webhook", async (c) => {
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+  const stripe = getStripe();
   const signature = c.req.header("stripe-signature");
 
   if (!signature) {
