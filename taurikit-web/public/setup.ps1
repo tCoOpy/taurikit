@@ -28,6 +28,8 @@ function Main {
 
     Write-Host "`nStarting project wizard...`n"
 
+    Ensure-Bun
+
     $exe = Join-Path $InstallDir $BinName
     $wizardArgs = @("new")
 
@@ -99,6 +101,16 @@ function Add-ToPath {
     [Environment]::SetEnvironmentVariable("PATH", "$Dir;$userPath", "User")
     $env:PATH = "$Dir;$env:PATH"
     Write-Host "  Added $Dir to user PATH"
+}
+
+function Ensure-Bun {
+    if (Get-Command "bun" -ErrorAction SilentlyContinue) {
+        return
+    }
+    Write-Host "Installing bun..."
+    irm bun.sh/install.ps1 | iex
+    $bunDir = Join-Path $HOME ".bun\bin"
+    $env:PATH = "$bunDir;$env:PATH"
 }
 
 Main

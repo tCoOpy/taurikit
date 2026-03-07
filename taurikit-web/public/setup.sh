@@ -23,6 +23,8 @@ main() {
         install_cli
     fi
 
+    ensure_bun
+
     printf "\nStarting project wizard...\n\n"
     exec "${INSTALL_DIR}/${BIN_NAME}" new "$@" < /dev/tty
 }
@@ -111,6 +113,16 @@ need_cmd() {
     if ! command -v "$1" > /dev/null 2>&1; then
         err "Required command '$1' not found"
     fi
+}
+
+ensure_bun() {
+    if command -v bun > /dev/null 2>&1; then
+        return
+    fi
+    printf "Installing bun...\n"
+    curl -fsSL https://bun.sh/install | bash
+    export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+    export PATH="$BUN_INSTALL/bin:$PATH"
 }
 
 err() {
