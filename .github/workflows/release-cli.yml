@@ -21,7 +21,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
             binary: taurikit
             cross: true
-          - os: macos-13
+          - os: macos-14
             target: x86_64-apple-darwin
             binary: taurikit
           - os: macos-14
