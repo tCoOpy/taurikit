@@ -94,10 +94,57 @@ jobs:
         working-directory: test-output
         run: bunx tsc --noEmit
 
-      - name: Rust check
+      - name: Rust build
         working-directory: test-output/src-tauri
-        run: cargo check
+        run: cargo build
+
+      - name: Rust tests
+        working-directory: test-output/src-tauri
+        run: cargo test
 
       - name: Vite build
         working-directory: test-output
         run: bun run build
+
+      - name: Launch app (Linux)
+        if: runner.os == 'Linux'
+        working-directory: test-output
+        run: |
+          sudo apt-get install -y xvfb
+          xvfb-run --auto-servernum timeout 15 cargo run --manifest-path src-tauri/Cargo.toml 2>&1 || code=$?
+          # Exit code 124 = timeout killed it (app was still running = success)
+          if [ "${code:-0}" -eq 124 ] || [ "${code:-0}" -eq 0 ]; then
+            echo "✓ App launched successfully"
+          else
+            echo "✗ App crashed with exit code $code"
+            exit 1
+          fi
+
+      - name: Launch app (macOS)
+        if: runner.os == 'macOS'
+        working-directory: test-output
+        run: |
+          timeout 15 cargo run --manifest-path src-tauri/Cargo.toml 2>&1 || code=$?
+          if [ "${code:-0}" -eq 124 ] || [ "${code:-0}" -eq 0 ]; then
+            echo "✓ App launched successfully"
+          else
+            echo "✗ App crashed with exit code $code"
+            exit 1
+          fi
+
+      - name: Launch app (Windows)
+        if: runner.os == 'Windows'
+        working-directory: test-output
+        shell: pwsh
+        run: |
+          $proc = Start-Process -FilePath "src-tauri\target\debug\test-app.exe" -PassThru
+          Start-Sleep -Seconds 15
+          if ($proc.HasExited) {
+            if ($proc.ExitCode -ne 0) {
+              Write-Error "App crashed with exit code $($proc.ExitCode)"
+              exit 1
+            }
+          } else {
+            $proc | Stop-Process -Force
+          }
+          Write-Host "✓ App launched successfully"
