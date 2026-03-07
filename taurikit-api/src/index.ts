@@ -6,6 +6,7 @@ import type { Env } from "./types";
 import { licenseRoutes } from "./routes/license";
 import { templateRoutes } from "./routes/template";
 import { stripeRoutes } from "./routes/stripe";
+import { cliRoutes } from "./routes/cli";
 
 const sql = postgres(process.env.DATABASE_URL!);
 
@@ -19,7 +20,7 @@ app.use("*", async (c, next) => {
 app.use(
   "*",
   cors({
-    origin: "https://taurikit.dev",
+    origin: ["https://taurikit.dev"],
     allowMethods: ["GET", "POST"],
     allowHeaders: ["Content-Type", "Authorization"],
   })
@@ -30,6 +31,7 @@ app.get("/health", (c) => c.json({ ok: true }));
 app.route("/license", licenseRoutes);
 app.route("/template", templateRoutes);
 app.route("/stripe", stripeRoutes);
+app.route("/cli", cliRoutes);
 
 const port = parseInt(process.env.PORT || "3000", 10);
 serve({ fetch: app.fetch, port }, (info) => {

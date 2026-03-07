@@ -4,7 +4,7 @@ set -eu
 # Usage: curl -fsSL https://taurikit.dev/setup.sh | sh
 #   or:  curl -fsSL https://taurikit.dev/setup.sh | sh -s -- --license-key TK-xxxx
 
-REPO="tCoOpy/taurikit"
+API_BASE="https://taurikit-api-production.up.railway.app"
 BIN_NAME="taurikit"
 INSTALL_DIR="${TAURIKIT_INSTALL_DIR:-$HOME/.taurikit/bin}"
 
@@ -34,7 +34,7 @@ install_cli() {
 
     printf "Installing taurikit %s (%s)...\n" "$version" "$target"
 
-    local url="https://github.com/${REPO}/releases/download/${version}/taurikit-${target}.tar.gz"
+    local url="${API_BASE}/cli/download/${target}?version=${version}"
     local tmpdir
     tmpdir="$(mktemp -d)"
     trap 'rm -rf "$tmpdir"' EXIT
@@ -73,8 +73,7 @@ detect_arch() {
 }
 
 fetch_latest_version() {
-    local url="https://api.github.com/repos/${REPO}/releases/latest"
-    curl -fsSL "$url" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p'
+    curl -fsSL "${API_BASE}/cli/latest" | sed -n 's/.*"version": *"\([^"]*\)".*/\1/p'
 }
 
 add_to_shell_profile() {

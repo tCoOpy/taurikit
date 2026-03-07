@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-$Repo = "tCoOpy/taurikit"
+$ApiBase = "https://taurikit-api-production.up.railway.app"
 $BinName = "taurikit.exe"
 $InstallDir = if ($env:TAURIKIT_INSTALL_DIR) { $env:TAURIKIT_INSTALL_DIR } else { Join-Path $HOME ".taurikit\bin" }
 
@@ -12,7 +12,7 @@ function Main {
 
     Write-Host "Installing taurikit $version ($target)..."
 
-    $url = "https://github.com/$Repo/releases/download/$version/taurikit-$target.zip"
+    $url = "$ApiBase/cli/download/${target}?version=$version"
     $tmpDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())
     New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
 
@@ -51,9 +51,8 @@ function Get-Arch {
 }
 
 function Get-LatestVersion {
-    $url = "https://api.github.com/repos/$Repo/releases/latest"
-    $resp = Invoke-RestMethod -Uri $url -UseBasicParsing
-    return $resp.tag_name
+    $resp = Invoke-RestMethod -Uri "$ApiBase/cli/latest" -UseBasicParsing
+    return $resp.version
 }
 
 function Add-ToPath {
