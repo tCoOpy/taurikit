@@ -124,11 +124,15 @@ jobs:
         if: runner.os == 'macOS'
         working-directory: test-output
         run: |
-          timeout 15 cargo run --manifest-path src-tauri/Cargo.toml 2>&1 || code=$?
-          if [ "${code:-0}" -eq 124 ] || [ "${code:-0}" -eq 0 ]; then
+          cargo run --manifest-path src-tauri/Cargo.toml &
+          PID=$!
+          sleep 15
+          if kill -0 "$PID" 2>/dev/null; then
             echo "✓ App launched successfully"
+            kill "$PID" 2>/dev/null || true
           else
-            echo "✗ App crashed with exit code $code"
+            wait "$PID" || code=$?
+            echo "✗ App crashed with exit code ${code:-0}"
             exit 1
           fi
 
@@ -137,7 +141,7 @@ jobs:
         working-directory: test-output
         shell: pwsh
         run: |
-          $proc = Start-Process -FilePath "src-tauri\target\debug\test-app.exe" -PassThru
+          $proc = Start-Process -FilePath "cargo" -ArgumentList "run","--manifest-path","src-tauri\Cargo.toml" -PassThru -NoNewWindow
           Start-Sleep -Seconds 15
           if ($proc.HasExited) {
             if ($proc.ExitCode -ne 0) {
