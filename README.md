@@ -7,13 +7,13 @@ Generate production-ready Tauri v2 desktop apps with one command.
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://taurikit.dev/setup.sh | TAURIKIT_LICENSE_KEY="TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF" sh
+curl -fsSL https://taurikit-web-production.up.railway.app/setup.sh | TAURIKIT_LICENSE_KEY="TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF" sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-$env:TAURIKIT_LICENSE_KEY = "TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF"; irm https://taurikit.dev/setup.ps1 | iex
+$env:TAURIKIT_LICENSE_KEY = "TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF"; irm https://taurikit-web-production.up.railway.app/setup.ps1 | iex
 ```
 
 That's it. The script installs the CLI, downloads the template, and walks you through the project wizard — app name, auth provider, UI framework, and OAuth setup.
