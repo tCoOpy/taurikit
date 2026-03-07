@@ -37,6 +37,7 @@ pub fn run(config: Config) -> Result<()> {
 
     let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
+    let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
     let token_map = collect_tokens(&config, &auth_module, &ui_module)?;
     let slug = token_map["APP_SLUG"].clone();
 
@@ -90,7 +91,7 @@ pub fn run(config: Config) -> Result<()> {
     )?;
     println!("  ✓ Merged npm dependencies");
 
-    write_env_file(&output)?;
+    write_env_file(&output, &auth_module, oauth_client_id.as_deref())?;
     write_manifest(&output, &token_map, &auth_module, &ui_module)?;
 
     if !config.no_git {
@@ -109,11 +110,7 @@ pub fn run(config: Config) -> Result<()> {
         }
     }
 
-    let env_hint = match auth_module.as_str() {
-        "github" => "add your GITHUB_CLIENT_ID",
-        "google" => "add your GOOGLE_CLIENT_ID",
-        _ => "review your config",
-    };
+    let needs_oauth = matches!(auth_module.as_str(), "github" | "google") && oauth_client_id.is_none();
 
     println!();
     println!("{}", "─".repeat(50));
@@ -121,7 +118,23 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(" Next steps:");
     println!("   cd {slug}");
-    println!("   # Edit .env — {env_hint}");
+    if needs_oauth {
+        match auth_module.as_str() {
+            "github" => {
+                println!("   # Set up GitHub OAuth:");
+                println!("   #   1. Go to https://github.com/settings/developers");
+                println!("   #   2. Create an OAuth App (callback URL can be blank)");
+                println!("   #   3. Copy Client ID into .env as GITHUB_CLIENT_ID");
+            }
+            "google" => {
+                println!("   # Set up Google OAuth:");
+                println!("   #   1. Go to https://console.cloud.google.com/apis/credentials");
+                println!("   #   2. Create a Desktop app credential");
+                println!("   #   3. Copy Client ID into .env as GOOGLE_CLIENT_ID");
+            }
+            _ => {}
+        }
+    }
     println!("   bun tauri dev");
     println!("{}", "─".repeat(50));
     println!();
@@ -161,6 +174,46 @@ fn collect_modules(config: &Config) -> Result<(String, String)> {
     };
 
     Ok((auth, ui))
+}
+
+fn collect_oauth_client_id(config: &Config, auth_module: &str) -> Result<Option<String>> {
+    let (env_name, setup_url, help) = match auth_module {
+        "github" => (
+            "GITHUB_CLIENT_ID",
+            "https://github.com/settings/developers",
+            "Create a GitHub OAuth App → copy the Client ID",
+        ),
+        "google" => (
+            "GOOGLE_CLIENT_ID",
+            "https://console.cloud.google.com/apis/credentials",
+            "Create a Desktop app credential → copy the Client ID",
+        ),
+        _ => return Ok(None),
+    };
+
+    if config.yes {
+        return Ok(None);
+    }
+
+    println!();
+    println!("  OAuth setup — {env_name}");
+    println!("  {setup_url}");
+    println!("  {help}");
+    println!();
+
+    let input = Text::new(&format!("{env_name} (press Enter to skip):"))
+        .with_help_message("You can set this later in .env")
+        .with_default("")
+        .prompt()
+        .context("Prompt cancelled")?;
+
+    let trimmed = input.trim().to_string();
+    if trimmed.is_empty() || trimmed.starts_with("your_") {
+        println!("  → Skipped. Set {env_name} in .env before running the app.");
+        Ok(None)
+    } else {
+        Ok(Some(trimmed))
+    }
 }
 
 fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result<TokenMap> {
@@ -305,12 +358,30 @@ fn process_output(output: &Path, markers: &HashMap<String, String>, token_map: &
     Ok(count)
 }
 
-fn write_env_file(output: &Path) -> Result<()> {
+fn write_env_file(output: &Path, auth_module: &str, client_id: Option<&str>) -> Result<()> {
     let example = output.join(".env.example");
     let env = output.join(".env");
     if example.exists() && !env.exists() {
         fs::copy(&example, &env).context("Failed to create .env from .env.example")?;
-        println!("  ✓ Created .env");
+
+        if let Some(id) = client_id {
+            let content = fs::read_to_string(&env)?;
+            let content = match auth_module {
+                "github" => content.replace(
+                    "GITHUB_CLIENT_ID=your_github_client_id_here",
+                    &format!("GITHUB_CLIENT_ID={id}"),
+                ),
+                "google" => content.replace(
+                    "GOOGLE_CLIENT_ID=your_google_client_id_here",
+                    &format!("GOOGLE_CLIENT_ID={id}"),
+                ),
+                _ => content,
+            };
+            fs::write(&env, content)?;
+            println!("  ✓ Created .env (OAuth configured)");
+        } else {
+            println!("  ✓ Created .env");
+        }
     }
     Ok(())
 }
