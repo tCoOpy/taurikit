@@ -14,13 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
             binary: taurikit
-          - os: ubuntu-22.04
+          - os: ubuntu-24.04
             target: aarch64-unknown-linux-gnu
             binary: taurikit
-            cross: true
+            linker: aarch64-linux-gnu-gcc
           - os: macos-14
             target: x86_64-apple-darwin
             binary: taurikit
@@ -45,22 +45,19 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Install cross-compilation toolchain
+        if: matrix.linker
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "taurikit-cli -> target"
 
-      - name: Install cross
-        if: matrix.cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
-
-      - name: Build (native)
-        if: ${{ !matrix.cross }}
+      - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-
-      - name: Build (cross)
-        if: matrix.cross
-        run: cross build --release --target ${{ matrix.target }}
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: ${{ matrix.linker || '' }}
 
       - name: Package
         shell: bash
