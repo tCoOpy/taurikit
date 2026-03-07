@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use inquire::{Select, Text};
+use dialoguer::{Input, Select};
 use walkdir::WalkDir;
 
 /// Reopen stdin from /dev/tty when piped (e.g. `curl | sh`).
@@ -246,11 +246,13 @@ fn collect_modules(config: &Config) -> Result<(String, String)> {
         None if non_interactive => "github".into(),
         None => {
             let options: Vec<&str> = AUTH_OPTIONS.to_vec();
-            let choice = Select::new("Auth provider:", options)
-                .with_help_message("Choose an authentication method")
-                .prompt()
+            let idx = Select::new()
+                .with_prompt("Auth provider")
+                .items(&options)
+                .default(0)
+                .interact()
                 .context("Prompt cancelled")?;
-            choice.to_string()
+            options[idx].to_string()
         }
     };
 
@@ -260,11 +262,13 @@ fn collect_modules(config: &Config) -> Result<(String, String)> {
         None if non_interactive => "shadcn".into(),
         None => {
             let options: Vec<&str> = UI_OPTIONS.to_vec();
-            let choice = Select::new("UI framework:", options)
-                .with_help_message("Choose a component library")
-                .prompt()
+            let idx = Select::new()
+                .with_prompt("UI framework")
+                .items(&options)
+                .default(0)
+                .interact()
                 .context("Prompt cancelled")?;
-            choice.to_string()
+            options[idx].to_string()
         }
     };
 
@@ -296,10 +300,11 @@ fn collect_oauth_client_id(config: &Config, auth_module: &str) -> Result<Option<
     println!("  {help}");
     println!();
 
-    let input = Text::new(&format!("{env_name} (press Enter to skip):"))
-        .with_help_message("You can set this later in .env")
-        .with_default("")
-        .prompt()
+    let input: String = Input::new()
+        .with_prompt(format!("{env_name} (press Enter to skip)"))
+        .default(String::new())
+        .show_default(false)
+        .interact_text()
         .context("Prompt cancelled")?;
 
     let trimmed = input.trim().to_string();
@@ -320,9 +325,9 @@ fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result
     let app_name = match config.app_name.clone() {
         Some(n) => n,
         None if non_interactive => "My App".into(),
-        None => Text::new("App name:")
-            .with_placeholder("My Desktop App")
-            .prompt()
+        None => Input::<String>::new()
+            .with_prompt("App name")
+            .interact_text()
             .context("Prompt cancelled")?,
     };
 
@@ -330,9 +335,10 @@ fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result
     let app_slug = match config.slug.clone() {
         Some(s) => s,
         None if non_interactive => default_slug.clone(),
-        None => Text::new("App slug (kebab-case):")
-            .with_default(&default_slug)
-            .prompt()
+        None => Input::<String>::new()
+            .with_prompt("App slug (kebab-case)")
+            .default(default_slug.clone())
+            .interact_text()
             .context("Prompt cancelled")?,
     };
 
@@ -340,36 +346,42 @@ fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result
     let bundle_id = match config.bundle_id.clone() {
         Some(b) => b,
         None if non_interactive => default_bundle.clone(),
-        None => Text::new("Bundle identifier:")
-            .with_default(&default_bundle)
-            .prompt()
+        None => Input::<String>::new()
+            .with_prompt("Bundle identifier")
+            .default(default_bundle.clone())
+            .interact_text()
             .context("Prompt cancelled")?,
     };
 
     let version = match config.app_version.as_deref() {
         Some(v) if !v.is_empty() => v.to_owned(),
         _ if non_interactive => "0.1.0".into(),
-        _ => Text::new("Version:")
-            .with_default("0.1.0")
-            .prompt()
+        _ => Input::<String>::new()
+            .with_prompt("Version")
+            .default("0.1.0".into())
+            .interact_text()
             .context("Prompt cancelled")?,
     };
 
     let author = match config.author.as_deref() {
         Some(a) => a.to_owned(),
         None if non_interactive => String::new(),
-        None => Text::new("Author name:")
-            .with_default("")
-            .prompt()
+        None => Input::<String>::new()
+            .with_prompt("Author name")
+            .default(String::new())
+            .show_default(false)
+            .interact_text()
             .context("Prompt cancelled")?,
     };
 
     let description = match config.description.as_deref() {
         Some(d) => d.to_owned(),
         None if non_interactive => String::new(),
-        None => Text::new("Description (optional):")
-            .with_default("")
-            .prompt()
+        None => Input::<String>::new()
+            .with_prompt("Description (optional)")
+            .default(String::new())
+            .show_default(false)
+            .interact_text()
             .context("Prompt cancelled")?,
     };
 
@@ -385,7 +397,7 @@ fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result
     map.insert("APP_AUTHOR".into(), author);
     map.insert("AUTH_MODULE".into(), auth_module.into());
     map.insert("UI_MODULE".into(), ui_module.into());
-    map.insert("TAURIKIT_VERSION".into(), env!("CARGO_PKG_VERSION").into());
+    map.insert("TAURIKIT_VERSION".into(), env!("GIT_VERSION").into());
     map.insert("GENERATED_AT".into(), unix_timestamp());
 
     Ok(map)
