@@ -12,7 +12,7 @@ use clap::{Parser, Subcommand};
 
 /// TauriKit — generate a production-ready Rust Tauri desktop app from a template.
 #[derive(Parser)]
-#[command(name = "taurikit", version, about)]
+#[command(name = "taurikit", version = env!("GIT_VERSION"), about)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

@@ -33,7 +33,7 @@ pub fn run() -> Result<()> {
     crate::tui::banner::print_inline_separator();
     println!(
         "  {}",
-        format!("Doctor v{}", env!("CARGO_PKG_VERSION")).truecolor(255, 191, 0)
+        format!("Doctor v{}", env!("GIT_VERSION")).truecolor(255, 191, 0)
     );
     println!();
 

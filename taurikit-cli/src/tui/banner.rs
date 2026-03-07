@@ -18,7 +18,7 @@ pub fn print_inline_banner() {
         "{}",
         format!(
             "  v{} — Rust Tauri Desktop App Starter",
-            env!("CARGO_PKG_VERSION")
+            env!("GIT_VERSION")
         )
         .truecolor(255, 191, 0)
     );
