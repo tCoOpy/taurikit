@@ -10,13 +10,25 @@ INSTALL_DIR="${TAURIKIT_INSTALL_DIR:-$HOME/.taurikit/bin}"
 
 main() {
     if command -v "$BIN_NAME" > /dev/null 2>&1; then
-        printf "taurikit already installed: %s\n" "$(command -v "$BIN_NAME")"
+        local latest current
+        latest="$(fetch_latest_version)"
+        current="$(get_installed_version)"
+        if [ -n "$current" ] && [ "$current" != "$latest" ]; then
+            printf "Updating taurikit %s -> %s...\n" "$current" "$latest"
+            install_cli
+        else
+            printf "taurikit %s is up to date.\n" "$current"
+        fi
     else
         install_cli
     fi
 
     printf "\nStarting project wizard...\n\n"
     exec "${INSTALL_DIR}/${BIN_NAME}" new "$@"
+}
+
+get_installed_version() {
+    "$BIN_NAME" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo ""
 }
 
 install_cli() {

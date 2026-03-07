@@ -14,7 +14,14 @@ $InstallDir = if ($env:TAURIKIT_INSTALL_DIR) { $env:TAURIKIT_INSTALL_DIR } else 
 function Main {
     $existing = Get-Command "taurikit" -ErrorAction SilentlyContinue
     if ($existing) {
-        Write-Host "taurikit already installed: $($existing.Source)"
+        $latestVersion = Get-LatestVersion
+        $currentVersion = Get-InstalledVersion $existing.Source
+        if ($currentVersion -and $currentVersion -ne $latestVersion) {
+            Write-Host "Updating taurikit $currentVersion -> $latestVersion..."
+            Install-Cli
+        } else {
+            Write-Host "taurikit $currentVersion is up to date."
+        }
     } else {
         Install-Cli
     }
@@ -68,6 +75,17 @@ function Install-Cli {
 function Get-LatestVersion {
     $resp = Invoke-RestMethod -Uri "$ApiBase/cli/latest" -UseBasicParsing
     return $resp.version
+}
+
+function Get-InstalledVersion {
+    param([string]$ExePath)
+    try {
+        $output = & $ExePath --version 2>$null
+        if ($output -match '(\d+\.\d+\.\d+)') {
+            return $Matches[1]
+        }
+    } catch {}
+    return $null
 }
 
 function Add-ToPath {
