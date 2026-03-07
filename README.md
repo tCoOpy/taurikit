@@ -1,59 +1,38 @@
 # TauriKit
 
-Monorepo for TauriKit — a CLI that generates production-ready Tauri v2 desktop apps.
+Generate production-ready Tauri v2 desktop apps with one command.
 
-## Quick Start (Test Key)
+## Quick Start
 
-Generate a project using the test license key:
-
-### 1. Build the CLI
+**macOS / Linux:**
 
 ```sh
-cd taurikit-cli
-cargo build --release
+curl -fsSL https://taurikit.dev/setup.sh | TAURIKIT_LICENSE_KEY="TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF" sh
 ```
 
-The binary is at `target/release/taurikit.exe` (Windows) or `target/release/taurikit` (macOS/Linux).
-
-### 2. Run the wizard
-
-```sh
-export TAURIKIT_LICENSE_KEY="TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF"
-./taurikit-cli/target/release/taurikit new "My App"
-```
-
-Or on **Windows PowerShell**:
+**Windows (PowerShell):**
 
 ```powershell
-$env:TAURIKIT_LICENSE_KEY = "TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF"
-.\taurikit-cli\target\release\taurikit.exe new "My App"
+$env:TAURIKIT_LICENSE_KEY = "TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF"; irm https://taurikit.dev/setup.ps1 | iex
 ```
 
-The wizard prompts for:
+That's it. The script installs the CLI, downloads the template, and walks you through the project wizard — app name, auth provider, UI framework, and OAuth setup.
 
-- **Auth provider** — GitHub OAuth, Google OAuth, or None
-- **UI framework** — shadcn/ui or DaisyUI
-- **OAuth Client ID** — enter it now or skip and set later in `.env`
-
-Once complete, the project is ready:
+When the wizard finishes:
 
 ```sh
 cd my-app
 bun tauri dev
 ```
 
-### Non-interactive mode
+## What the wizard sets up
 
-```sh
-TAURIKIT_LICENSE_KEY="TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF" \
-  ./taurikit-cli/target/release/taurikit new "My App" --auth github --ui shadcn --yes
-```
-
-### Using a local template (no license key needed)
-
-```sh
-./taurikit-cli/target/release/taurikit new "My App" --template ./scaffold
-```
+- **Tauri v2** + React 19 + TypeScript
+- **Auth** — GitHub OAuth (Device Flow), Google OAuth (PKCE), or None
+- **UI** — shadcn/ui or DaisyUI
+- **OAuth Client ID** — enter during setup or configure later in `.env`
+- **Git repo** initialized with first commit
+- **Dependencies** installed automatically
 
 ## Repository Structure
 
@@ -64,9 +43,3 @@ TAURIKIT_LICENSE_KEY="TK-TEST1234-ABCD5678-EF901234-56789ABC-DEADBEEF" \
 | `taurikit-web/` | Marketing site (Astro) |
 | `taurikit-docs/` | Documentation (Starlight) |
 | `scaffold/` | Template source — base + auth/ui overlays |
-
-## Prerequisites
-
-- [Rust](https://rustup.rs/)
-- [Bun](https://bun.sh/) (or Node.js 18+)
-- Platform dependencies for Tauri v2 — run `taurikit doctor` to check
