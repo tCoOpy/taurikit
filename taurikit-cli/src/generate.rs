@@ -7,6 +7,22 @@ use colored::Colorize;
 use inquire::{Select, Text};
 use walkdir::WalkDir;
 
+/// Reopen stdin from /dev/tty when piped (e.g. `curl | sh`).
+/// Without this, `inquire` cannot enter raw mode on a pipe fd.
+#[cfg(unix)]
+fn ensure_stdin_tty() {
+    use std::io::IsTerminal;
+    if !std::io::stdin().is_terminal() {
+        if let Ok(tty) = fs::File::open("/dev/tty") {
+            use std::os::unix::io::AsRawFd;
+            unsafe { libc::dup2(tty.as_raw_fd(), libc::STDIN_FILENO); }
+        }
+    }
+}
+
+#[cfg(not(unix))]
+fn ensure_stdin_tty() {}
+
 use crate::overlay;
 use crate::tokens::{self, TokenMap};
 use crate::tui::banner;
@@ -34,6 +50,8 @@ const AUTH_OPTIONS: &[&str] = &["github", "google", "none"];
 const UI_OPTIONS: &[&str] = &["shadcn", "daisyui"];
 
 pub fn run(config: Config) -> Result<()> {
+    ensure_stdin_tty();
+
     println!();
     banner::print_inline_banner();
     banner::print_inline_separator();

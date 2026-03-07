@@ -1546,6 +1546,7 @@ dependencies = [
  "dirs",
  "flate2",
  "inquire",
+ "libc",
  "ratatui",
  "reqwest",
  "serde",
