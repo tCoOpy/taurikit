@@ -3,6 +3,7 @@ use std::process::{Command, Stdio};
 
 use anyhow::Result;
 use colored::Colorize;
+use dialoguer::Confirm;
 
 #[derive(Clone, Copy)]
 enum Status {
@@ -110,18 +111,98 @@ pub fn run() -> Result<()> {
 }
 
 fn check_rust() -> Check {
-    match get_version("rustc", &["--version"]) {
-        Some(v) => Check {
+    let version = match get_version("rustc", &["--version"]) {
+        Some(v) => v,
+        None => {
+            return Check {
+                name: "Rust",
+                status: Status::Missing,
+                detail: "not found — install from https://rustup.rs".into(),
+            };
+        }
+    };
+
+    if parse_semver(&version).map_or(false, |(maj, min, _)| maj >= 1 && min >= 88) {
+        return Check { name: "Rust", status: Status::Ok, detail: version };
+    }
+
+    let has_rustup = Command::new("rustup")
+        .arg("--version")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+
+    if !has_rustup {
+        return Check {
             name: "Rust",
-            status: Status::Ok,
-            detail: v,
+            status: Status::Warning,
+            detail: format!("{version} — requires rustc ≥ 1.88.0, install rustup from https://rustup.rs"),
+        };
+    }
+
+    println!(
+        "\n  {} {}: {}",
+        "!".truecolor(255, 220, 60).bold(),
+        "Rust".truecolor(255, 220, 60),
+        format!("{version} — requires rustc ≥ 1.88.0").truecolor(180, 180, 190),
+    );
+
+    let should_update = Confirm::new()
+        .with_prompt("    Run `rustup update` now?")
+        .default(true)
+        .interact()
+        .unwrap_or(false);
+
+    if !should_update {
+        return Check {
+            name: "Rust",
+            status: Status::Warning,
+            detail: format!("{version} — requires rustc ≥ 1.88.0, run: rustup update"),
+        };
+    }
+
+    println!();
+    let update_ok = Command::new("rustup")
+        .arg("update")
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    println!();
+
+    if !update_ok {
+        return Check {
+            name: "Rust",
+            status: Status::Warning,
+            detail: format!("{version} — rustup update failed, update manually"),
+        };
+    }
+
+    match get_version("rustc", &["--version"]) {
+        Some(new_v) if parse_semver(&new_v).map_or(false, |(maj, min, _)| maj >= 1 && min >= 88) => {
+            Check { name: "Rust", status: Status::Ok, detail: format!("{new_v} (updated)") }
+        }
+        Some(new_v) => Check {
+            name: "Rust",
+            status: Status::Warning,
+            detail: format!("{new_v} — still below 1.88.0, check your active toolchain"),
         },
         None => Check {
             name: "Rust",
-            status: Status::Missing,
-            detail: "not found — install from https://rustup.rs".into(),
+            status: Status::Warning,
+            detail: "rustc not found after update — check your PATH".into(),
         },
     }
+}
+
+fn parse_semver(s: &str) -> Option<(u32, u32, u32)> {
+    let version_part = s.split_whitespace().find(|w| w.contains('.'))?;
+    let mut parts = version_part.split('.');
+    let major = parts.next()?.parse().ok()?;
+    let minor = parts.next()?.parse().ok()?;
+    let patch = parts.next().and_then(|p| p.split('-').next()?.parse().ok()).unwrap_or(0);
+    Some((major, minor, patch))
 }
 
 fn check_cargo() -> Check {
