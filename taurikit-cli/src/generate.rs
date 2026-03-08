@@ -129,15 +129,23 @@ pub fn run(config: Config) -> Result<()> {
         tx.send(WorkerMsg::StepDone(0)).ok();
 
         let auth_dir = template.join("auth").join(&auth_module_c);
-        if auth_dir.is_dir() {
-            copy_overlay(&auth_dir, &output_c)?;
+        if !auth_dir.is_dir() {
+            anyhow::bail!(
+                "Auth module '{}' not found in template at {}. Try updating your template cache.",
+                auth_module_c, auth_dir.display()
+            );
         }
+        copy_overlay(&auth_dir, &output_c)?;
         tx.send(WorkerMsg::StepDone(1)).ok();
 
         let ui_dir = template.join("ui").join(&ui_module_c);
-        if ui_dir.is_dir() {
-            copy_overlay(&ui_dir, &output_c)?;
+        if !ui_dir.is_dir() {
+            anyhow::bail!(
+                "UI module '{}' not found in template at {}. Try updating your template cache.",
+                ui_module_c, ui_dir.display()
+            );
         }
+        copy_overlay(&ui_dir, &output_c)?;
         tx.send(WorkerMsg::StepDone(2)).ok();
 
         let auth_config = overlay::load_module_config(&auth_dir.join("module.json"))?;
@@ -452,8 +460,7 @@ fn copy_overlay(source: &Path, output: &Path) -> Result<()> {
             continue;
         }
 
-        // module.json is metadata — don't copy to output
-        if rel.file_name().map(|f| f == "module.json").unwrap_or(false) {
+        if rel.file_name().map(|f| f == "module.json" || f == ".sync-state.json").unwrap_or(false) {
             continue;
         }
 
