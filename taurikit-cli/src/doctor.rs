@@ -629,9 +629,9 @@ pub fn ensure_webview2() -> Result<()> {
 
 #[cfg(target_os = "linux")]
 const LINUX_LIBS: &[&str] = &[
-    "libwebkit2gtk-4.1",
+    "webkit2gtk-4.1",
     "javascriptcoregtk-4.1",
-    "libgtk-3",
+    "gtk+-3.0",
     "libsoup-3.0",
 ];
 
@@ -744,7 +744,7 @@ fn check_linux_deps() -> Check {
         Check {
             name: "Linux deps",
             status: Status::Ok,
-            detail: "webkit2gtk, javascriptcoregtk, gtk3, libsoup3 found".into(),
+            detail: "webkit2gtk-4.1, javascriptcoregtk-4.1, gtk+-3.0, libsoup-3.0 found".into(),
         }
     } else {
         let distro = detect_distro();
