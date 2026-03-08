@@ -34,6 +34,15 @@ pub fn validate_and_resolve(license_key: &str) -> Result<PathBuf> {
     Ok(cached)
 }
 
+pub fn refresh_cache(license_key: &str) -> Result<PathBuf> {
+    let cached = cache_dir().join(TEMPLATE_VERSION);
+    if cached.exists() {
+        fs::remove_dir_all(&cached)
+            .with_context(|| format!("Failed to clear cached template at {}", cached.display()))?;
+    }
+    validate_and_resolve(license_key)
+}
+
 fn validate_key(license_key: &str) -> Result<ValidateResponse> {
     let client = reqwest::blocking::Client::new();
     let resp = client

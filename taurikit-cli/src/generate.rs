@@ -68,8 +68,17 @@ pub fn run(config: Config) -> Result<()> {
     let pm = collect_pm(&config)?;
     let pm_resolved = crate::doctor::ensure_package_manager(Some(&pm))?;
 
-    let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
+    let mut template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
+
+    let auth_dir_check = template.join("auth").join(&auth_module);
+    let ui_dir_check = template.join("ui").join(&ui_module);
+    if (!auth_dir_check.is_dir() || !ui_dir_check.is_dir()) && config.template.is_none() {
+        if let Some(key) = config.license_key.as_deref() {
+            template = license::refresh_cache(key)?;
+        }
+    }
+
     let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
     let token_map = collect_tokens(&config, &auth_module, &ui_module, &pm_resolved)?;
     let slug = token_map["APP_SLUG"].clone();
@@ -131,8 +140,9 @@ pub fn run(config: Config) -> Result<()> {
         let auth_dir = template.join("auth").join(&auth_module_c);
         if !auth_dir.is_dir() {
             anyhow::bail!(
-                "Auth module '{}' not found in template at {}. Try updating your template cache.",
-                auth_module_c, auth_dir.display()
+                "Auth module '{}' not found in template at {}.\n\
+                 Delete {} and re-run to refresh the cache.",
+                auth_module_c, auth_dir.display(), template.display()
             );
         }
         copy_overlay(&auth_dir, &output_c)?;
@@ -141,8 +151,9 @@ pub fn run(config: Config) -> Result<()> {
         let ui_dir = template.join("ui").join(&ui_module_c);
         if !ui_dir.is_dir() {
             anyhow::bail!(
-                "UI module '{}' not found in template at {}. Try updating your template cache.",
-                ui_module_c, ui_dir.display()
+                "UI module '{}' not found in template at {}.\n\
+                 Delete {} and re-run to refresh the cache.",
+                ui_module_c, ui_dir.display(), template.display()
             );
         }
         copy_overlay(&ui_dir, &output_c)?;

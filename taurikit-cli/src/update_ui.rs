@@ -67,14 +67,24 @@ pub fn run(config: Config) -> Result<()> {
         );
     }
 
-    let template = resolve_template(config.template, config.license_key.as_deref())?;
-    let ui_dir = template.join("ui").join(&target_ui);
+    let mut template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
+    let mut ui_dir = template.join("ui").join(&target_ui);
     if !ui_dir.is_dir() {
-        anyhow::bail!(
-            "UI overlay '{}' not found in template at {}",
-            target_ui,
-            ui_dir.display()
-        );
+        if config.template.is_none() {
+            if let Some(key) = config.license_key.as_deref() {
+                template = license::refresh_cache(key)?;
+                ui_dir = template.join("ui").join(&target_ui);
+            }
+        }
+        if !ui_dir.is_dir() {
+            anyhow::bail!(
+                "UI overlay '{}' not found in template at {}.\n\
+                 Delete {} and re-run to refresh the cache.",
+                target_ui,
+                ui_dir.display(),
+                template.display()
+            );
+        }
     }
 
     let changes = compute_changes(&ui_dir, &project_dir)?;
