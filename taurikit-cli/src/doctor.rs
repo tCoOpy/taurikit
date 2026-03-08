@@ -28,6 +28,139 @@ struct Check {
     detail: String,
 }
 
+fn has_rustup() -> bool {
+    Command::new("rustup")
+        .arg("--version")
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+fn install_rustup() -> Result<()> {
+    println!(
+        "  {} {}",
+        "→".truecolor(80, 200, 255).bold(),
+        "Installing rustup…".truecolor(220, 220, 230),
+    );
+
+    #[cfg(unix)]
+    {
+        let ok = Command::new("sh")
+            .args(["-c", "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"])
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !ok {
+            anyhow::bail!("Failed to install rustup. Install manually from https://rustup.rs");
+        }
+        // Source cargo env so rustc/cargo are available in this session
+        let home = std::env::var("HOME").unwrap_or_default();
+        let cargo_bin = format!("{home}/.cargo/bin");
+        if let Ok(path) = std::env::var("PATH") {
+            std::env::set_var("PATH", format!("{cargo_bin}:{path}"));
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        let ok = Command::new("powershell")
+            .args([
+                "-NoProfile", "-Command",
+                "Invoke-WebRequest -Uri https://win.rustup.rs/x86_64 -OutFile $env:TEMP\\rustup-init.exe; \
+                 & $env:TEMP\\rustup-init.exe -y",
+            ])
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !ok {
+            anyhow::bail!("Failed to install rustup. Install manually from https://rustup.rs");
+        }
+        let userprofile = std::env::var("USERPROFILE").unwrap_or_default();
+        let cargo_bin = format!("{userprofile}\\.cargo\\bin");
+        if let Ok(path) = std::env::var("PATH") {
+            std::env::set_var("PATH", format!("{cargo_bin};{path}"));
+        }
+    }
+
+    println!(
+        "  {} {}\n",
+        "✓".truecolor(80, 220, 100).bold(),
+        "rustup installed".truecolor(80, 220, 100),
+    );
+    Ok(())
+}
+
+fn rustup_update() -> Result<()> {
+    println!(
+        "  {} {}",
+        "→".truecolor(80, 200, 255).bold(),
+        "Updating Rust via rustup…".truecolor(220, 220, 230),
+    );
+    println!();
+
+    let ok = Command::new("rustup")
+        .arg("update")
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+    println!();
+
+    if !ok {
+        anyhow::bail!("rustup update failed. Update Rust manually and try again.");
+    }
+
+    let new_v = get_version("rustc", &["--version"])
+        .ok_or_else(|| anyhow::anyhow!("rustc not found after update — check your PATH"))?;
+
+    if parse_semver(&new_v).map_or(true, |(maj, min, _)| !(maj >= 1 && min >= 88)) {
+        anyhow::bail!(
+            "Rust {new_v} is still below 1.88.0 after update. Check your active toolchain."
+        );
+    }
+
+    println!(
+        "  {} {}\n",
+        "✓".truecolor(80, 220, 100).bold(),
+        format!("Rust updated to {new_v}").truecolor(80, 220, 100),
+    );
+    Ok(())
+}
+
+pub fn ensure_rust_version() -> Result<()> {
+    match get_version("rustc", &["--version"]) {
+        Some(version) if parse_semver(&version).map_or(false, |(maj, min, _)| maj >= 1 && min >= 88) => {
+            return Ok(());
+        }
+        Some(version) => {
+            println!(
+                "\n  {} {}: {}",
+                "!".truecolor(255, 220, 60).bold(),
+                "Rust".truecolor(255, 220, 60),
+                format!("{version} — requires rustc ≥ 1.88.0").truecolor(180, 180, 190),
+            );
+            if !has_rustup() {
+                install_rustup()?;
+            }
+            rustup_update()?;
+        }
+        None => {
+            println!(
+                "\n  {} {}: {}",
+                "!".truecolor(255, 220, 60).bold(),
+                "Rust".truecolor(255, 220, 60),
+                "not found".truecolor(180, 180, 190),
+            );
+            if !has_rustup() {
+                install_rustup()?;
+            }
+            rustup_update()?;
+        }
+    }
+    Ok(())
+}
+
 pub fn run() -> Result<()> {
     println!();
     crate::tui::banner::print_inline_banner();
@@ -196,7 +329,7 @@ fn check_rust() -> Check {
     }
 }
 
-fn parse_semver(s: &str) -> Option<(u32, u32, u32)> {
+pub(crate) fn parse_semver(s: &str) -> Option<(u32, u32, u32)> {
     let version_part = s.split_whitespace().find(|w| w.contains('.'))?;
     let mut parts = version_part.split('.');
     let major = parts.next()?.parse().ok()?;
@@ -353,7 +486,7 @@ fn check_webview2() -> Check {
     }
 }
 
-fn get_version(cmd: &str, args: &[&str]) -> Option<String> {
+pub(crate) fn get_version(cmd: &str, args: &[&str]) -> Option<String> {
     Command::new(cmd)
         .args(args)
         .stdout(Stdio::piped())

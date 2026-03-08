@@ -57,6 +57,8 @@ pub fn run(config: Config) -> Result<()> {
     banner::print_inline_separator();
     println!();
 
+    crate::doctor::ensure_rust_version()?;
+
     let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
     let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
