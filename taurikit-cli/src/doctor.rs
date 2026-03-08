@@ -436,7 +436,21 @@ const LINUX_LIBS: &[&str] = &[
 ];
 
 #[cfg(target_os = "linux")]
+fn has_cmd(cmd: &str) -> bool {
+    Command::new("which")
+        .arg(cmd)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+#[cfg(target_os = "linux")]
 fn find_missing_linux_libs() -> Vec<&'static str> {
+    if !has_cmd("pkg-config") {
+        return LINUX_LIBS.to_vec();
+    }
     LINUX_LIBS
         .iter()
         .copied()
@@ -453,25 +467,69 @@ fn find_missing_linux_libs() -> Vec<&'static str> {
 }
 
 #[cfg(target_os = "linux")]
-fn linux_install_hint() -> String {
-    let has = |cmd: &str| {
-        Command::new("which")
-            .arg(cmd)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false)
-    };
+enum Distro {
+    Debian,
+    Fedora,
+    Arch,
+    Unknown,
+}
 
-    if has("apt-get") {
-        "sudo apt install libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libgtk-3-dev libsoup-3.0-dev libssl-dev libayatana-appindicator3-dev".into()
-    } else if has("dnf") {
-        "sudo dnf install webkit2gtk4.1-devel javascriptcoregtk4.1-devel gtk3-devel libsoup3-devel openssl-devel libappindicator-gtk3-devel".into()
-    } else if has("pacman") {
-        "sudo pacman -S webkit2gtk-4.1 gtk3 libsoup3 openssl libayatana-appindicator".into()
+#[cfg(target_os = "linux")]
+fn detect_distro() -> Distro {
+    if has_cmd("apt-get") {
+        Distro::Debian
+    } else if has_cmd("dnf") {
+        Distro::Fedora
+    } else if has_cmd("pacman") {
+        Distro::Arch
     } else {
-        "see https://v2.tauri.app/start/prerequisites/#linux".into()
+        Distro::Unknown
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn linux_install_cmd(distro: &Distro) -> Option<(&'static str, &'static [&'static str])> {
+    match distro {
+        Distro::Debian => Some(("apt-get", &[
+            "install", "-y",
+            "pkg-config",
+            "libwebkit2gtk-4.1-dev",
+            "libjavascriptcoregtk-4.1-dev",
+            "libgtk-3-dev",
+            "libsoup-3.0-dev",
+            "libssl-dev",
+            "libayatana-appindicator3-dev",
+        ])),
+        Distro::Fedora => Some(("dnf", &[
+            "install", "-y",
+            "pkg-config",
+            "webkit2gtk4.1-devel",
+            "javascriptcoregtk4.1-devel",
+            "gtk3-devel",
+            "libsoup3-devel",
+            "openssl-devel",
+            "libappindicator-gtk3-devel",
+        ])),
+        Distro::Arch => Some(("pacman", &[
+            "-S", "--needed", "--noconfirm",
+            "pkgconf",
+            "webkit2gtk-4.1",
+            "gtk3",
+            "libsoup3",
+            "openssl",
+            "libayatana-appindicator",
+        ])),
+        Distro::Unknown => None,
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn linux_install_hint(distro: &Distro) -> String {
+    match distro {
+        Distro::Debian => "sudo apt install libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libgtk-3-dev libsoup-3.0-dev libssl-dev libayatana-appindicator3-dev".into(),
+        Distro::Fedora => "sudo dnf install webkit2gtk4.1-devel javascriptcoregtk4.1-devel gtk3-devel libsoup3-devel openssl-devel libappindicator-gtk3-devel".into(),
+        Distro::Arch => "sudo pacman -S webkit2gtk-4.1 gtk3 libsoup3 openssl libayatana-appindicator".into(),
+        Distro::Unknown => "see https://v2.tauri.app/start/prerequisites/#linux".into(),
     }
 }
 
@@ -485,16 +543,68 @@ fn check_linux_deps() -> Check {
             detail: "webkit2gtk, javascriptcoregtk, gtk3, libsoup3 found".into(),
         }
     } else {
+        let distro = detect_distro();
         Check {
             name: "Linux deps",
             status: Status::Missing,
             detail: format!(
                 "missing: {} — {}",
                 missing.join(", "),
-                linux_install_hint()
+                linux_install_hint(&distro)
             ),
         }
     }
+}
+
+#[cfg(target_os = "linux")]
+fn install_linux_deps() -> Result<()> {
+    let distro = detect_distro();
+    let (pm, args) = match linux_install_cmd(&distro) {
+        Some(cmd) => cmd,
+        None => anyhow::bail!(
+            "Could not detect your package manager. Install the Tauri system libraries manually:\n  \
+             see https://v2.tauri.app/start/prerequisites/#linux"
+        ),
+    };
+
+    println!(
+        "  {} {}",
+        "→".truecolor(80, 200, 255).bold(),
+        "Installing system libraries via sudo…".truecolor(220, 220, 230),
+    );
+    println!();
+
+    let ok = Command::new("sudo")
+        .arg(pm)
+        .args(args)
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
+
+    println!();
+
+    if !ok {
+        anyhow::bail!(
+            "Package installation failed. Install manually:\n  {}",
+            linux_install_hint(&distro)
+        );
+    }
+
+    let still_missing = find_missing_linux_libs();
+    if !still_missing.is_empty() {
+        anyhow::bail!(
+            "Still missing after install: {}. Install manually:\n  {}",
+            still_missing.join(", "),
+            linux_install_hint(&distro)
+        );
+    }
+
+    println!(
+        "  {} {}\n",
+        "✓".truecolor(80, 220, 100).bold(),
+        "System libraries installed".truecolor(80, 220, 100),
+    );
+    Ok(())
 }
 
 #[cfg(target_os = "linux")]
@@ -503,20 +613,46 @@ pub fn ensure_linux_deps() -> Result<()> {
     if missing.is_empty() {
         return Ok(());
     }
+
+    let distro = detect_distro();
+
     println!(
         "\n  {} {}: {}",
-        "✗".truecolor(240, 70, 70).bold(),
-        "Linux deps".truecolor(240, 70, 70),
-        format!("missing: {}", missing.join(", ")).truecolor(240, 70, 70),
+        "!".truecolor(255, 220, 60).bold(),
+        "Linux deps".truecolor(255, 220, 60),
+        format!("missing: {}", missing.join(", ")).truecolor(180, 180, 190),
     );
-    println!(
-        "\n  {} {}\n",
-        "→".truecolor(80, 200, 255).bold(),
-        linux_install_hint().truecolor(220, 220, 230),
-    );
-    anyhow::bail!(
-        "Install the missing system libraries listed above, then run `taurikit new` again."
-    )
+
+    if linux_install_cmd(&distro).is_none() {
+        println!(
+            "\n  {} {}\n",
+            "→".truecolor(80, 200, 255).bold(),
+            "see https://v2.tauri.app/start/prerequisites/#linux".truecolor(220, 220, 230),
+        );
+        anyhow::bail!(
+            "Could not detect your package manager. Install the missing libraries manually, then run `taurikit new` again."
+        );
+    }
+
+    let should_install = Confirm::new()
+        .with_prompt("    Install system libraries now? (requires sudo)")
+        .default(true)
+        .interact()
+        .unwrap_or(false);
+
+    if !should_install {
+        println!(
+            "\n  {} {}\n",
+            "→".truecolor(80, 200, 255).bold(),
+            linux_install_hint(&distro).truecolor(220, 220, 230),
+        );
+        anyhow::bail!(
+            "Install the missing system libraries listed above, then run `taurikit new` again."
+        );
+    }
+
+    println!();
+    install_linux_deps()
 }
 
 #[cfg(not(target_os = "linux"))]
