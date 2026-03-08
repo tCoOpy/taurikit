@@ -43,11 +43,13 @@ pub struct Config {
     pub yes: bool,
     pub no_git: bool,
     pub no_install: bool,
+    pub pm: Option<String>,
     pub license_key: Option<String>,
 }
 
 const AUTH_OPTIONS: &[&str] = &["github", "google", "none"];
 const UI_OPTIONS: &[&str] = &["shadcn", "daisyui"];
+const PM_OPTIONS: &[&str] = &["bun", "pnpm", "yarn", "npm"];
 
 pub fn run(config: Config) -> Result<()> {
     ensure_stdin_tty();
@@ -59,11 +61,17 @@ pub fn run(config: Config) -> Result<()> {
 
     crate::doctor::ensure_rust_version()?;
     crate::doctor::ensure_linux_deps()?;
+    crate::doctor::ensure_xcode_clt()?;
+    crate::doctor::ensure_msvc()?;
+    crate::doctor::ensure_webview2()?;
+
+    let pm = collect_pm(&config)?;
+    let pm_resolved = crate::doctor::ensure_package_manager(Some(&pm))?;
 
     let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
     let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
-    let token_map = collect_tokens(&config, &auth_module, &ui_module)?;
+    let token_map = collect_tokens(&config, &auth_module, &ui_module, &pm_resolved)?;
     let slug = token_map["APP_SLUG"].clone();
 
     let output = config.output.unwrap_or_else(|| PathBuf::from(&slug));
@@ -80,10 +88,11 @@ pub fn run(config: Config) -> Result<()> {
     }
 
     println!(
-        "\n  {} auth={}, ui={}",
+        "\n  {} auth={}, ui={}, pm={}",
         "Modules:".truecolor(255, 191, 0),
         auth_module.truecolor(80, 200, 255).bold(),
-        ui_module.truecolor(80, 200, 255).bold()
+        ui_module.truecolor(80, 200, 255).bold(),
+        pm_resolved.truecolor(80, 200, 255).bold()
     );
     println!();
 
@@ -113,6 +122,7 @@ pub fn run(config: Config) -> Result<()> {
     let output_c = output.clone();
     let token_map_c = token_map.clone();
     let oauth_id_c = oauth_client_id.clone();
+    let pm_c = pm_resolved.clone();
 
     crate::tui::generation::run_generation(&slug, steps, move |tx| {
         copy_overlay(&base_dir, &output_c)?;
@@ -162,7 +172,7 @@ pub fn run(config: Config) -> Result<()> {
         }
 
         if !no_install {
-            match crate::hooks::install_deps(&output_c) {
+            match crate::hooks::install_deps(&output_c, &pm_c) {
                 Ok(()) => tx.send(WorkerMsg::StepDone(7)).ok(),
                 Err(_) => tx.send(WorkerMsg::StepSkipped(7)).ok(),
             };
@@ -230,9 +240,10 @@ pub fn run(config: Config) -> Result<()> {
             _ => {}
         }
     }
+    let dev_cmd = crate::doctor::pm_tauri_dev(&pm_resolved);
     println!(
         "   {}",
-        "bun tauri dev".truecolor(80, 200, 255).bold()
+        dev_cmd.truecolor(80, 200, 255).bold()
     );
     banner::print_inline_separator();
     println!();
@@ -278,6 +289,27 @@ fn collect_modules(config: &Config) -> Result<(String, String)> {
     Ok((auth, ui))
 }
 
+fn collect_pm(config: &Config) -> Result<String> {
+    match config.pm.clone() {
+        Some(p) if PM_OPTIONS.contains(&p.as_str()) => Ok(p),
+        Some(p) => anyhow::bail!(
+            "Invalid package manager '{p}'. Options: {}",
+            PM_OPTIONS.join(", ")
+        ),
+        None if config.yes => Ok("bun".into()),
+        None => {
+            let options: Vec<&str> = PM_OPTIONS.to_vec();
+            let idx = Select::new()
+                .with_prompt("Package manager")
+                .items(&options)
+                .default(0)
+                .interact()
+                .context("Prompt cancelled")?;
+            Ok(options[idx].to_string())
+        }
+    }
+}
+
 fn collect_oauth_client_id(config: &Config, auth_module: &str) -> Result<Option<String>> {
     let (env_name, setup_url, help) = match auth_module {
         "github" => (
@@ -319,7 +351,7 @@ fn collect_oauth_client_id(config: &Config, auth_module: &str) -> Result<Option<
     }
 }
 
-fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result<TokenMap> {
+fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str, pm: &str) -> Result<TokenMap> {
     let non_interactive = config.yes
         || (config.app_name.is_some()
             && config.slug.is_some()
@@ -400,6 +432,9 @@ fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str) -> Result
     map.insert("APP_AUTHOR".into(), author);
     map.insert("AUTH_MODULE".into(), auth_module.into());
     map.insert("UI_MODULE".into(), ui_module.into());
+    map.insert("PACKAGE_MANAGER".into(), pm.into());
+    map.insert("PM_RUN".into(), crate::doctor::pm_run_prefix(pm).into());
+    map.insert("PM_TAURI_DEV".into(), crate::doctor::pm_tauri_dev(pm).into());
     map.insert("TAURIKIT_VERSION".into(), env!("GIT_VERSION").into());
     map.insert("GENERATED_AT".into(), unix_timestamp());
 

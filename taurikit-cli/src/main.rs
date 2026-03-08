@@ -77,6 +77,10 @@ enum Commands {
         #[arg(long)]
         no_install: bool,
 
+        /// Package manager: bun, pnpm, yarn, or npm
+        #[arg(long, value_name = "PM")]
+        pm: Option<String>,
+
         /// License key for template download
         /// [env: TAURIKIT_LICENSE_KEY]
         #[arg(long, env = "TAURIKIT_LICENSE_KEY", value_name = "KEY")]
@@ -105,6 +109,7 @@ fn main() -> anyhow::Result<()> {
             yes,
             no_git,
             no_install,
+            pm,
             license_key,
         } => {
             generate::run(generate::Config {
@@ -121,6 +126,7 @@ fn main() -> anyhow::Result<()> {
                 yes,
                 no_git,
                 no_install,
+                pm,
                 license_key,
             })?;
         }

@@ -16,31 +16,9 @@ pub fn git_init(dir: &Path) -> Result<()> {
     Ok(())
 }
 
-/// Install frontend dependencies using the best available package manager.
-pub fn install_deps(dir: &Path) -> Result<()> {
-    let pm = detect_package_manager();
+/// Install frontend dependencies using the specified package manager.
+pub fn install_deps(dir: &Path, pm: &str) -> Result<()> {
     run_cmd(pm, &["install"], dir, &format!("{pm} install"))
-}
-
-/// Detect the preferred package manager (bun > pnpm > yarn > npm).
-fn detect_package_manager() -> &'static str {
-    for pm in &["bun", "pnpm", "yarn", "npm"] {
-        if command_exists(pm) {
-            return pm;
-        }
-    }
-    "npm" // fallback — always present with Node.js
-}
-
-/// Returns true if the given command is available in PATH.
-fn command_exists(cmd: &str) -> bool {
-    Command::new(cmd)
-        .arg("--version")
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
-        .map(|s| s.success())
-        .unwrap_or(false)
 }
 
 fn run_cmd(program: &str, args: &[&str], dir: &Path, label: &str) -> Result<()> {
