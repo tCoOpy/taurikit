@@ -100,6 +100,15 @@ where
             thread::sleep(Duration::from_millis(1800));
             break;
         }
+
+        if !all_done && pending_msgs.is_empty() {
+            if let Ok(guard) = work_result.try_lock() {
+                if guard.is_some() {
+                    drop(guard);
+                    break;
+                }
+            }
+        }
     }
 
     super::leave_tui().map_err(|e| anyhow::anyhow!("Failed to leave TUI: {e}"))?;
