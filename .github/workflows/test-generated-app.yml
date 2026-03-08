@@ -94,6 +94,10 @@ jobs:
         working-directory: test-output
         run: bunx tsc --noEmit
 
+      - name: Vite build
+        working-directory: test-output
+        run: bun run build
+
       - name: Rust build
         working-directory: test-output/src-tauri
         run: cargo build
@@ -102,16 +106,12 @@ jobs:
         working-directory: test-output/src-tauri
         run: cargo test
 
-      - name: Vite build
-        working-directory: test-output
-        run: bun run build
-
       - name: Launch app (Linux)
         if: runner.os == 'Linux'
         working-directory: test-output
         run: |
           sudo apt-get install -y xvfb
-          xvfb-run --auto-servernum timeout 15 cargo run --manifest-path src-tauri/Cargo.toml 2>&1 || code=$?
+          xvfb-run --auto-servernum timeout 15 ./src-tauri/target/debug/testapp 2>&1 || code=$?
           # Exit code 124 = timeout killed it (app was still running = success)
           if [ "${code:-0}" -eq 124 ] || [ "${code:-0}" -eq 0 ]; then
             echo "✓ App launched successfully"
@@ -124,7 +124,7 @@ jobs:
         if: runner.os == 'macOS'
         working-directory: test-output
         run: |
-          cargo run --manifest-path src-tauri/Cargo.toml &
+          ./src-tauri/target/debug/testapp &
           PID=$!
           sleep 15
           if kill -0 "$PID" 2>/dev/null; then
@@ -141,7 +141,7 @@ jobs:
         working-directory: test-output
         shell: pwsh
         run: |
-          $proc = Start-Process -FilePath "cargo" -ArgumentList "run","--manifest-path","src-tauri\Cargo.toml" -PassThru -NoNewWindow
+          $proc = Start-Process -FilePath ".\src-tauri\target\debug\testapp.exe" -PassThru -NoNewWindow
           Start-Sleep -Seconds 15
           if ($proc.HasExited) {
             if ($proc.ExitCode -ne 0) {
