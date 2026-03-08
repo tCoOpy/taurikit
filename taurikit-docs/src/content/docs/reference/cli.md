@@ -78,6 +78,6 @@ Verifies the following are installed and meet minimum versions:
 | Git | (any) |
 | Tauri CLI | (any, optional) |
 | WebView2 | Windows only |
-| webkit2gtk / gtk3 / libsoup3 | Linux only |
+| webkit2gtk / javascriptcoregtk / gtk3 / libsoup3 | Linux only |
 
 Outputs a pass/fail summary with version numbers and actionable fix instructions for any failures.

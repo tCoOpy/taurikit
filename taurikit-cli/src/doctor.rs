@@ -428,41 +428,100 @@ fn check_tauri_cli() -> Check {
 }
 
 #[cfg(target_os = "linux")]
-fn check_linux_deps() -> Check {
-    let libs = [
-        "libwebkit2gtk-4.1",
-        "libgtk-3",
-        "libsoup-3.0",
-    ];
-    let mut missing = Vec::new();
-    for lib in &libs {
-        let ok = Command::new("pkg-config")
-            .args(["--exists", lib])
+const LINUX_LIBS: &[&str] = &[
+    "libwebkit2gtk-4.1",
+    "javascriptcoregtk-4.1",
+    "libgtk-3",
+    "libsoup-3.0",
+];
+
+#[cfg(target_os = "linux")]
+fn find_missing_linux_libs() -> Vec<&'static str> {
+    LINUX_LIBS
+        .iter()
+        .copied()
+        .filter(|lib| {
+            !Command::new("pkg-config")
+                .args(["--exists", lib])
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .map(|s| s.success())
+                .unwrap_or(false)
+        })
+        .collect()
+}
+
+#[cfg(target_os = "linux")]
+fn linux_install_hint() -> String {
+    let has = |cmd: &str| {
+        Command::new("which")
+            .arg(cmd)
             .stdout(Stdio::null())
             .stderr(Stdio::null())
             .status()
             .map(|s| s.success())
-            .unwrap_or(false);
-        if !ok {
-            missing.push(*lib);
-        }
+            .unwrap_or(false)
+    };
+
+    if has("apt-get") {
+        "sudo apt install libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libgtk-3-dev libsoup-3.0-dev libssl-dev libayatana-appindicator3-dev".into()
+    } else if has("dnf") {
+        "sudo dnf install webkit2gtk4.1-devel javascriptcoregtk4.1-devel gtk3-devel libsoup3-devel openssl-devel libappindicator-gtk3-devel".into()
+    } else if has("pacman") {
+        "sudo pacman -S webkit2gtk-4.1 gtk3 libsoup3 openssl libayatana-appindicator".into()
+    } else {
+        "see https://v2.tauri.app/start/prerequisites/#linux".into()
     }
+}
+
+#[cfg(target_os = "linux")]
+fn check_linux_deps() -> Check {
+    let missing = find_missing_linux_libs();
     if missing.is_empty() {
         Check {
             name: "Linux deps",
             status: Status::Ok,
-            detail: "webkit2gtk, gtk3, libsoup3 found".into(),
+            detail: "webkit2gtk, javascriptcoregtk, gtk3, libsoup3 found".into(),
         }
     } else {
         Check {
             name: "Linux deps",
             status: Status::Missing,
             detail: format!(
-                "missing: {} — see https://v2.tauri.app/start/prerequisites/#linux",
-                missing.join(", ")
+                "missing: {} — {}",
+                missing.join(", "),
+                linux_install_hint()
             ),
         }
     }
+}
+
+#[cfg(target_os = "linux")]
+pub fn ensure_linux_deps() -> Result<()> {
+    let missing = find_missing_linux_libs();
+    if missing.is_empty() {
+        return Ok(());
+    }
+    println!(
+        "\n  {} {}: {}",
+        "✗".truecolor(240, 70, 70).bold(),
+        "Linux deps".truecolor(240, 70, 70),
+        format!("missing: {}", missing.join(", ")).truecolor(240, 70, 70),
+    );
+    println!(
+        "\n  {} {}\n",
+        "→".truecolor(80, 200, 255).bold(),
+        linux_install_hint().truecolor(220, 220, 230),
+    );
+    anyhow::bail!(
+        "Install the missing system libraries listed above, then run `taurikit new` again."
+    )
+}
+
+#[cfg(not(target_os = "linux"))]
+pub fn ensure_linux_deps() -> Result<()> {
+    Ok(())
 }
 
 #[cfg(target_os = "windows")]

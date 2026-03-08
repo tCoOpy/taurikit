@@ -58,6 +58,7 @@ pub fn run(config: Config) -> Result<()> {
     println!();
 
     crate::doctor::ensure_rust_version()?;
+    crate::doctor::ensure_linux_deps()?;
 
     let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
