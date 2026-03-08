@@ -5,6 +5,7 @@ mod license;
 mod overlay;
 mod tokens;
 mod tui;
+mod update_ui;
 
 use std::path::PathBuf;
 
@@ -52,7 +53,7 @@ enum Commands {
         #[arg(long, value_name = "MODULE")]
         auth: Option<String>,
 
-        /// UI framework: shadcn or daisyui
+        /// UI framework: shadcn, daisyui, or tesign
         #[arg(long, value_name = "FRAMEWORK")]
         ui: Option<String>,
 
@@ -85,6 +86,31 @@ enum Commands {
         /// [env: TAURIKIT_LICENSE_KEY]
         #[arg(long, env = "TAURIKIT_LICENSE_KEY", value_name = "KEY")]
         license_key: Option<String>,
+    },
+
+    /// Update or switch the UI framework in an existing project
+    UpdateUi {
+        /// Switch to a different UI framework: shadcn, daisyui, or tesign
+        #[arg(long, value_name = "FRAMEWORK")]
+        switch: Option<String>,
+
+        /// Path to the template directory
+        /// [env: TAURIKIT_TEMPLATE]
+        #[arg(long, env = "TAURIKIT_TEMPLATE", value_name = "DIR")]
+        template: Option<PathBuf>,
+
+        /// License key for template download
+        /// [env: TAURIKIT_LICENSE_KEY]
+        #[arg(long, env = "TAURIKIT_LICENSE_KEY", value_name = "KEY")]
+        license_key: Option<String>,
+
+        /// Overwrite locally modified files without prompting
+        #[arg(long)]
+        force: bool,
+
+        /// Show what would change without modifying files
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 
@@ -128,6 +154,21 @@ fn main() -> anyhow::Result<()> {
                 no_install,
                 pm,
                 license_key,
+            })?;
+        }
+        Commands::UpdateUi {
+            switch,
+            template,
+            license_key,
+            force,
+            dry_run,
+        } => {
+            update_ui::run(update_ui::Config {
+                switch,
+                template,
+                license_key,
+                force,
+                dry_run,
             })?;
         }
     }

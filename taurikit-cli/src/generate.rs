@@ -48,7 +48,7 @@ pub struct Config {
 }
 
 const AUTH_OPTIONS: &[&str] = &["github", "google", "none"];
-const UI_OPTIONS: &[&str] = &["shadcn", "daisyui"];
+const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign"];
 const PM_OPTIONS: &[&str] = &["bun", "pnpm", "yarn", "npm"];
 
 pub fn run(config: Config) -> Result<()> {
