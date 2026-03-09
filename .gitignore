@@ -28,3 +28,4 @@ github-repo-syncer/
 
 # Claude
 .claude/
+/scripts/release.ps1

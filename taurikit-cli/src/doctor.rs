@@ -277,7 +277,7 @@ pub fn pm_run_prefix(pm: &str) -> &'static str {
 /// Returns the command the user should type to run tauri dev.
 pub fn pm_tauri_dev(pm: &str) -> &'static str {
     match pm {
-        "bun" => "bun tauri dev",
+        "bun" => "bunx tauri dev",
         "pnpm" => "pnpm tauri dev",
         "yarn" => "yarn tauri dev",
         _ => "npx tauri dev",
