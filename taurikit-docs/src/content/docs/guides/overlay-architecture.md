@@ -103,7 +103,7 @@ These tokens are replaced in all non-binary files during generation:
 | `{{PACKAGE_MANAGER}}` | bun |
 | `{{PM_RUN}}` | bun run |
 | `{{PM_TAURI_DEV}}` | bun tauri dev |
-| `{{TAURIKIT_VERSION}}` | 1.2.5 |
+| `{{TAURIKIT_VERSION}}` | 1.2.8 |
 | `{{GENERATED_AT}}` | 1741500000 |
 
 **Important**: Do not use `{{TOKEN}}` syntax inside `.tsx`/`.jsx` files — curly braces conflict with JSX expressions. Use `VITE_` environment variables instead.

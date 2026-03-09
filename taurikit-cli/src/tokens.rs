@@ -55,12 +55,13 @@ pub fn is_binary_path(path: &Path) -> bool {
 }
 
 /// Returns true if a path component should cause the entire subtree to be skipped.
+/// Skips .git/ (VCS internals) but preserves .github/, .gitignore, CLAUDE.md, etc.
 pub fn should_skip_path(path: &Path) -> bool {
     path.components().any(|c| {
         let s = c.as_os_str().to_string_lossy();
         matches!(
             s.as_ref(),
-            "node_modules" | "target" | ".git" | "dist" | ".cache" | ".claude"
+            "node_modules" | "target" | ".git" | "dist" | ".cache"
         )
     })
 }
