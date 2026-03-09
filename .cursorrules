@@ -147,7 +147,7 @@ Tokens are `{{KEY}}` placeholders in template files that get replaced with user-
 | `{{PACKAGE_MANAGER}}` | bun | Detected/selected PM |
 | `{{PM_RUN}}` | bun | PM run prefix |
 | `{{PM_TAURI_DEV}}` | bun run tauri dev | PM dev command |
-| `{{TAURIKIT_VERSION}}` | 1.3.3 | Build-time version |
+| `{{TAURIKIT_VERSION}}` | 1.3.4 | Build-time version |
 | `{{GENERATED_AT}}` | 1741500000 | Unix timestamp |
 
 **Important:** `{{TOKEN}}` must NOT appear in `.tsx`/`.jsx` files — curly braces conflict with JSX syntax. Use `VITE_APP_NAME` env var for app name in React components.

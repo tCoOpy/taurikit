@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use colored::Colorize;
@@ -126,6 +128,9 @@ pub fn run(config: Config) -> Result<()> {
         steps[7].status = StepStatus::Skipped;
     }
 
+    let install_ok = Arc::new(AtomicBool::new(!no_install));
+    let install_ok_c = install_ok.clone();
+
     let auth_module_c = auth_module.clone();
     let ui_module_c = ui_module.clone();
     let output_c = output.clone();
@@ -187,14 +192,17 @@ pub fn run(config: Config) -> Result<()> {
         if !no_git {
             match crate::hooks::git_init(&output_c) {
                 Ok(()) => tx.send(WorkerMsg::StepDone(6)).ok(),
-                Err(_) => tx.send(WorkerMsg::StepSkipped(6)).ok(),
+                Err(e) => tx.send(WorkerMsg::StepFailed(6, e.to_string())).ok(),
             };
         }
 
         if !no_install {
             match crate::hooks::install_deps(&output_c, &pm_c) {
                 Ok(()) => tx.send(WorkerMsg::StepDone(7)).ok(),
-                Err(_) => tx.send(WorkerMsg::StepSkipped(7)).ok(),
+                Err(e) => {
+                    install_ok_c.store(false, Ordering::Relaxed);
+                    tx.send(WorkerMsg::StepFailed(7, e.to_string())).ok()
+                }
             };
         }
 
@@ -265,6 +273,12 @@ pub fn run(config: Config) -> Result<()> {
             }
             _ => {}
         }
+    }
+    if !install_ok.load(Ordering::Relaxed) {
+        println!(
+            "   {}",
+            format!("{pm_resolved} install").truecolor(80, 200, 255).bold()
+        );
     }
     let dev_cmd = crate::doctor::pm_tauri_dev(&pm_resolved);
     println!(

@@ -27,8 +27,6 @@ pub struct Step {
 
 pub enum WorkerMsg {
     StepDone(usize),
-    StepSkipped(usize),
-    #[allow(dead_code)]
     StepFailed(usize, String),
     AllDone,
 }
@@ -76,10 +74,6 @@ where
             match msg {
                 WorkerMsg::StepDone(i) => {
                     view.complete_step(i);
-                    last_step_time = Instant::now();
-                }
-                WorkerMsg::StepSkipped(i) => {
-                    view.skip_step(i);
                     last_step_time = Instant::now();
                 }
                 WorkerMsg::StepFailed(i, _err) => {
@@ -148,6 +142,7 @@ impl GenerationView {
         }
     }
 
+    #[allow(dead_code)]
     fn skip_step(&mut self, idx: usize) {
         if let Some(s) = self.steps.get_mut(idx) {
             s.status = StepStatus::Skipped;

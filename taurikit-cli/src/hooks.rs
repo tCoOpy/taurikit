@@ -22,16 +22,21 @@ pub fn install_deps(dir: &Path, pm: &str) -> Result<()> {
 }
 
 fn run_cmd(program: &str, args: &[&str], dir: &Path, label: &str) -> Result<()> {
-    let status = Command::new(program)
+    let output = Command::new(program)
         .args(args)
         .current_dir(dir)
         .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status()
+        .stderr(Stdio::piped())
+        .output()
         .with_context(|| format!("Failed to run `{label}` — is `{program}` installed?"))?;
 
-    if !status.success() {
-        anyhow::bail!("`{label}` exited with status {status}");
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let detail = stderr.lines().last().unwrap_or("").trim();
+        if detail.is_empty() {
+            anyhow::bail!("`{label}` exited with {}", output.status);
+        }
+        anyhow::bail!("`{label}` failed: {detail}");
     }
     Ok(())
 }
