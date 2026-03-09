@@ -424,6 +424,8 @@ fn has_msvc() -> bool {
         if std::path::Path::new(path).exists() {
             let ok = Command::new(path)
                 .args([
+                    "-products",
+                    "*",
                     "-latest",
                     "-requires",
                     "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
@@ -494,10 +496,7 @@ pub fn ensure_msvc() -> Result<()> {
                 "install",
                 "Microsoft.VisualStudio.2022.BuildTools",
                 "--override",
-                "--wait --passive \
-                 --add Microsoft.VisualStudio.Workload.VCTools \
-                 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \
-                 --add Microsoft.VisualStudio.Component.Windows11SDK.22621",
+                "--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621",
                 "--accept-source-agreements",
                 "--accept-package-agreements",
             ])
@@ -518,14 +517,7 @@ pub fn ensure_msvc() -> Result<()> {
         .args([
             "-NoProfile",
             "-Command",
-            r#"$url = 'https://aka.ms/vs/17/release/vs_BuildTools.exe'; \
-               $out = "$env:TEMP\vs_BuildTools.exe"; \
-               Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; \
-               Start-Process -FilePath $out -ArgumentList '--wait','--passive', \
-                 '--add','Microsoft.VisualStudio.Workload.VCTools', \
-                 '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64', \
-                 '--add','Microsoft.VisualStudio.Component.Windows11SDK.22621' \
-                 -Wait"#,
+            "$url = 'https://aka.ms/vs/17/release/vs_BuildTools.exe'; $out = \"$env:TEMP\\vs_BuildTools.exe\"; Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; Start-Process -FilePath $out -ArgumentList '--wait','--passive','--add','Microsoft.VisualStudio.Workload.VCTools','--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','--add','Microsoft.VisualStudio.Component.Windows11SDK.22621' -Wait",
         ])
         .status()
         .map(|s| s.success())
@@ -597,10 +589,7 @@ pub fn ensure_webview2() -> Result<()> {
         .args([
             "-NoProfile",
             "-Command",
-            r#"$url = 'https://go.microsoft.com/fwlink/p/?LinkId=2124703'; \
-               $out = "$env:TEMP\MicrosoftEdgeWebview2Setup.exe"; \
-               Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; \
-               Start-Process -FilePath $out -ArgumentList '/silent','/install' -Wait"#,
+            "$url = 'https://go.microsoft.com/fwlink/p/?LinkId=2124703'; $out = \"$env:TEMP\\MicrosoftEdgeWebview2Setup.exe\"; Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; Start-Process -FilePath $out -ArgumentList '/silent','/install' -Wait",
         ])
         .status()
         .map(|s| s.success())
