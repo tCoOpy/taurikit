@@ -134,6 +134,7 @@ pub fn run(config: Config) -> Result<()> {
     let pm_c = pm_resolved.clone();
 
     crate::tui::generation::run_generation(&slug, steps, move |tx| {
+        let result = (|| -> anyhow::Result<()> {
         copy_overlay(&base_dir, &output_c)?;
         tx.send(WorkerMsg::StepDone(0)).ok();
 
@@ -199,6 +200,12 @@ pub fn run(config: Config) -> Result<()> {
 
         tx.send(WorkerMsg::AllDone).ok();
         Ok(())
+        })();
+
+        if result.is_err() {
+            let _ = std::fs::remove_dir_all(&output_c);
+        }
+        result
     })?;
 
     let needs_oauth = matches!(auth_module.as_str(), "github" | "google") && oauth_client_id.is_none();
