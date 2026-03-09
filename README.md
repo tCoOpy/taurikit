@@ -22,7 +22,7 @@ When the wizard finishes:
 
 ```sh
 cd my-app
-bunx tauri dev
+bun run tauri dev
 ```
 
 ## What the wizard sets up

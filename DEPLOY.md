@@ -132,7 +132,7 @@ taurikit new "Test App" --auth github --ui shadcn --yes
 # 4. Run it
 cd test-app
 bun install
-bunx tauri dev
+bun run tauri dev
 ```
 
 ## DNS summary

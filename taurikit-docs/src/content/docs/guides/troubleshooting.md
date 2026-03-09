@@ -119,7 +119,7 @@ The automated WebView2 installer has a 15-minute timeout. If it fails:
 
 ### Hot reload not working
 
-1. Make sure _both_ the Vite dev server and Rust backend are running (`bunx tauri dev` starts both)
+1. Make sure _both_ the Vite dev server and Rust backend are running (`bun run tauri dev` starts both)
 2. Frontend changes hot-reload instantly; Rust changes require a recompile (automatic with `tauri dev`)
 
 ### Slow Rust compilation
