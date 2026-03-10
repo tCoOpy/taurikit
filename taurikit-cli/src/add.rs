@@ -374,7 +374,121 @@ fn print_plan(feature: &FeatureInfo) {
     println!();
 }
 
+pub fn run_silent(config: Config) -> Result<()> {
+    let feature = FEATURES
+        .iter()
+        .find(|f| f.name == config.feature)
+        .ok_or_else(|| {
+            anyhow::anyhow!("Unknown feature '{}'", config.feature)
+        })?;
+
+    let project = config.project.unwrap_or_else(|| PathBuf::from("."));
+
+    add_npm_deps_silent(&project, feature)?;
+    add_cargo_deps_silent(&project, feature)?;
+    add_tauri_plugin_silent(&project, feature)?;
+    add_capabilities_silent(&project, feature)?;
+
+    Ok(())
+}
+
+fn add_npm_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
+    if feature.npm_deps.is_empty() && feature.npm_dev_deps.is_empty() {
+        return Ok(());
+    }
+    let pkg_path = project.join("package.json");
+    let content = fs::read_to_string(&pkg_path).context("Failed to read package.json")?;
+    let mut pkg: serde_json::Value =
+        serde_json::from_str(&content).context("Failed to parse package.json")?;
+    let obj = pkg.as_object_mut().unwrap();
+    if !feature.npm_deps.is_empty() {
+        let deps = obj.entry("dependencies").or_insert_with(|| serde_json::json!({}));
+        for (name, ver) in feature.npm_deps {
+            deps[*name] = serde_json::Value::String(ver.to_string());
+        }
+    }
+    if !feature.npm_dev_deps.is_empty() {
+        let deps = obj.entry("devDependencies").or_insert_with(|| serde_json::json!({}));
+        for (name, ver) in feature.npm_dev_deps {
+            deps[*name] = serde_json::Value::String(ver.to_string());
+        }
+    }
+    let output = serde_json::to_string_pretty(&pkg)?;
+    fs::write(&pkg_path, output).context("Failed to write package.json")?;
+    Ok(())
+}
+
+fn add_cargo_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
+    if feature.cargo_deps.is_empty() {
+        return Ok(());
+    }
+    let cargo_path = project.join("src-tauri").join("Cargo.toml");
+    let mut content = fs::read_to_string(&cargo_path).context("Failed to read Cargo.toml")?;
+    for (name, ver) in feature.cargo_deps {
+        if content.contains(&format!("{name} =")) || content.contains(&format!("{name}=")) {
+            continue;
+        }
+        let dep_line = format!("{} = {}\n", name, ver);
+        if let Some(pos) = content.find("\n[build-dependencies]") {
+            content.insert_str(pos, &dep_line);
+        } else {
+            content.push_str(&dep_line);
+        }
+    }
+    fs::write(&cargo_path, content).context("Failed to write Cargo.toml")?;
+    Ok(())
+}
+
+fn add_tauri_plugin_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
+    if feature.tauri_plugins.is_empty() {
+        return Ok(());
+    }
+    let lib_path = project.join("src-tauri").join("src").join("lib.rs");
+    let mut content = fs::read_to_string(&lib_path).context("Failed to read lib.rs")?;
+    for plugin in feature.tauri_plugins {
+        let init_call = if plugin.contains("::init(") || plugin.contains("::new(") || plugin.contains("::Builder") {
+            format!(".plugin({})", plugin)
+        } else {
+            format!(".plugin({}::init())", plugin)
+        };
+        if content.contains(plugin) {
+            continue;
+        }
+        if let Some(pos) = content.find(".setup(") {
+            content.insert_str(pos, &format!("{}\n        ", init_call));
+        }
+    }
+    fs::write(&lib_path, content).context("Failed to write lib.rs")?;
+    Ok(())
+}
+
+fn add_capabilities_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
+    if feature.capabilities.is_empty() {
+        return Ok(());
+    }
+    let cap_path = project.join("src-tauri").join("capabilities").join("default.json");
+    let content = fs::read_to_string(&cap_path).context("Failed to read capabilities/default.json")?;
+    let mut cap: serde_json::Value =
+        serde_json::from_str(&content).context("Failed to parse capabilities/default.json")?;
+    let permissions = cap
+        .get_mut("permissions")
+        .and_then(|p| p.as_array_mut())
+        .context("Missing permissions array in default.json")?;
+    for perm in feature.capabilities {
+        let val = serde_json::Value::String(perm.to_string());
+        if !permissions.contains(&val) {
+            permissions.push(val);
+        }
+    }
+    let output = serde_json::to_string_pretty(&cap)?;
+    fs::write(&cap_path, output).context("Failed to write capabilities/default.json")?;
+    Ok(())
+}
+
 fn add_npm_deps(project: &Path, feature: &FeatureInfo) -> Result<()> {
+    if feature.npm_deps.is_empty() && feature.npm_dev_deps.is_empty() {
+        return Ok(());
+    }
     let pkg_path = project.join("package.json");
     let content = fs::read_to_string(&pkg_path).context("Failed to read package.json")?;
     let mut pkg: serde_json::Value =

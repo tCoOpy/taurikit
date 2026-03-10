@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use dialoguer::{Input, Select};
+use dialoguer::{Input, MultiSelect, Select};
 use walkdir::WalkDir;
 
 /// Reopen stdin from /dev/tty when piped (e.g. `curl | sh`).
@@ -48,11 +48,39 @@ pub struct Config {
     pub no_install: bool,
     pub pm: Option<String>,
     pub license_key: Option<String>,
+    pub extras: Vec<String>,
 }
 
 const AUTH_OPTIONS: &[&str] = &["github", "google", "none"];
 const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign", "minimal"];
 const PM_OPTIONS: &[&str] = &["bun", "pnpm", "yarn", "npm"];
+
+struct ExtraOption {
+    name: &'static str,
+    label: &'static str,
+}
+
+const EXTRAS_OPTIONS: &[ExtraOption] = &[
+    ExtraOption { name: "notifications", label: "Notifications — system notifications" },
+    ExtraOption { name: "clipboard", label: "Clipboard — system clipboard read/write" },
+    ExtraOption { name: "global-shortcut", label: "Global Shortcuts — system-wide keyboard shortcuts" },
+    ExtraOption { name: "autostart", label: "Autostart — launch app at system startup" },
+    ExtraOption { name: "log", label: "Logging — structured logging with colors" },
+    ExtraOption { name: "sql", label: "SQLite — embedded database" },
+    ExtraOption { name: "fs", label: "Filesystem — read/write file access" },
+    ExtraOption { name: "shell", label: "Shell — execute system commands" },
+    ExtraOption { name: "http", label: "HTTP Client — make HTTP requests" },
+    ExtraOption { name: "deep-link", label: "Deep Links — custom URL protocol handler" },
+    ExtraOption { name: "window-state", label: "Window State — persist window size/position" },
+    ExtraOption { name: "cmdk", label: "Command Palette — Ctrl/Cmd+K search" },
+    ExtraOption { name: "i18n", label: "i18n — internationalization" },
+    ExtraOption { name: "tanstack-query", label: "TanStack Query — data fetching & caching" },
+    ExtraOption { name: "framer-motion", label: "Motion — animations & transitions" },
+    ExtraOption { name: "react-hook-form", label: "React Hook Form + Zod — form management" },
+    ExtraOption { name: "tanstack-router", label: "TanStack Router — type-safe routing" },
+    ExtraOption { name: "date-fns", label: "date-fns — date utility library" },
+    ExtraOption { name: "sentry", label: "Sentry — error tracking & crash reporting" },
+];
 
 pub fn run(mut config: Config) -> Result<()> {
     ensure_stdin_tty();
@@ -90,6 +118,7 @@ pub fn run(mut config: Config) -> Result<()> {
     }
 
     let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
+    let extras = collect_extras(&config)?;
     let token_map = collect_tokens(&config, &auth_module, &ui_module, &pm_resolved)?;
     let slug = token_map["APP_SLUG"].clone();
 
@@ -107,16 +136,18 @@ pub fn run(mut config: Config) -> Result<()> {
     }
 
     println!(
-        "\n  {} auth={}, ui={}, pm={}",
+        "\n  {} auth={}, ui={}, pm={}, extras={}",
         "Modules:".truecolor(255, 191, 0),
         auth_module.truecolor(80, 200, 255).bold(),
         ui_module.truecolor(80, 200, 255).bold(),
-        pm_resolved.truecolor(80, 200, 255).bold()
+        pm_resolved.truecolor(80, 200, 255).bold(),
+        extras.len().to_string().truecolor(80, 200, 255).bold()
     );
     println!();
 
     let no_git = config.no_git;
     let no_install = config.no_install;
+    let has_extras = !extras.is_empty();
 
     let mut steps = vec![
         Step { label: "Copy base template".into(), status: StepStatus::Running },
@@ -124,16 +155,20 @@ pub fn run(mut config: Config) -> Result<()> {
         Step { label: format!("Apply ui/{ui_module} overlay"), status: StepStatus::Pending },
         Step { label: "Process tokens & markers".into(), status: StepStatus::Pending },
         Step { label: "Merge npm dependencies".into(), status: StepStatus::Pending },
+        Step { label: "Apply extras & plugins".into(), status: StepStatus::Pending },
         Step { label: "Write env & manifest".into(), status: StepStatus::Pending },
         Step { label: "Initialize git repository".into(), status: StepStatus::Pending },
         Step { label: "Install frontend dependencies".into(), status: StepStatus::Pending },
     ];
 
+    if !has_extras {
+        steps[5].status = StepStatus::Skipped;
+    }
     if no_git {
-        steps[6].status = StepStatus::Skipped;
+        steps[7].status = StepStatus::Skipped;
     }
     if no_install {
-        steps[7].status = StepStatus::Skipped;
+        steps[8].status = StepStatus::Skipped;
     }
 
     let install_ok = Arc::new(AtomicBool::new(!no_install));
@@ -145,6 +180,7 @@ pub fn run(mut config: Config) -> Result<()> {
     let token_map_c = token_map.clone();
     let oauth_id_c = oauth_client_id.clone();
     let pm_c = pm_resolved.clone();
+    let extras_c = extras.clone();
 
     crate::tui::generation::run_generation(&slug, steps, move |tx| {
         let result = (|| -> anyhow::Result<()> {
@@ -193,23 +229,35 @@ pub fn run(mut config: Config) -> Result<()> {
         )?;
         tx.send(WorkerMsg::StepDone(4)).ok();
 
+        if !extras_c.is_empty() {
+            for extra in &extras_c {
+                let add_config = crate::add::Config {
+                    feature: extra.clone(),
+                    project: Some(output_c.clone()),
+                    dry_run: false,
+                };
+                crate::add::run_silent(add_config)?;
+            }
+            tx.send(WorkerMsg::StepDone(5)).ok();
+        }
+
         write_env_file(&output_c, &auth_module_c, oauth_id_c.as_deref())?;
         write_manifest(&output_c, &token_map_c, &auth_module_c, &ui_module_c)?;
-        tx.send(WorkerMsg::StepDone(5)).ok();
+        tx.send(WorkerMsg::StepDone(6)).ok();
 
         if !no_git {
             match crate::hooks::git_init(&output_c) {
-                Ok(()) => tx.send(WorkerMsg::StepDone(6)).ok(),
-                Err(e) => tx.send(WorkerMsg::StepFailed(6, e.to_string())).ok(),
+                Ok(()) => tx.send(WorkerMsg::StepDone(7)).ok(),
+                Err(e) => tx.send(WorkerMsg::StepFailed(7, e.to_string())).ok(),
             };
         }
 
         if !no_install {
             match crate::hooks::install_deps(&output_c, &pm_c) {
-                Ok(()) => tx.send(WorkerMsg::StepDone(7)).ok(),
+                Ok(()) => tx.send(WorkerMsg::StepDone(8)).ok(),
                 Err(e) => {
                     install_ok_c.store(false, Ordering::Relaxed);
-                    tx.send(WorkerMsg::StepFailed(7, e.to_string())).ok()
+                    tx.send(WorkerMsg::StepFailed(8, e.to_string())).ok()
                 }
             };
         }
@@ -335,6 +383,29 @@ fn collect_modules(config: &Config) -> Result<(String, String)> {
     };
 
     Ok((auth, ui))
+}
+
+fn collect_extras(config: &Config) -> Result<Vec<String>> {
+    if !config.extras.is_empty() {
+        return Ok(config.extras.clone());
+    }
+    if config.yes {
+        return Ok(vec![]);
+    }
+
+    let labels: Vec<&str> = EXTRAS_OPTIONS.iter().map(|e| e.label).collect();
+
+    println!();
+    let selected = MultiSelect::new()
+        .with_prompt("Extras (Space to toggle, Enter to confirm)")
+        .items(&labels)
+        .interact()
+        .context("Prompt cancelled")?;
+
+    Ok(selected
+        .into_iter()
+        .map(|i| EXTRAS_OPTIONS[i].name.to_string())
+        .collect())
 }
 
 fn collect_pm(config: &Config) -> Result<String> {

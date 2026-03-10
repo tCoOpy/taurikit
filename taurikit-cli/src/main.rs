@@ -93,6 +93,10 @@ enum Commands {
         /// [env: TAURIKIT_LICENSE_KEY]
         #[arg(long, env = "TAURIKIT_LICENSE_KEY", value_name = "KEY")]
         license_key: Option<String>,
+
+        /// Extras to include (comma-separated): notifications,clipboard,sql,...
+        #[arg(long, value_name = "FEATURE", value_delimiter = ',')]
+        extras: Vec<String>,
     },
 
     /// Update or switch the UI framework in an existing project
@@ -228,6 +232,7 @@ fn main() -> anyhow::Result<()> {
             no_install,
             pm,
             license_key,
+            extras,
         } => {
             generate::run(generate::Config {
                 app_name,
@@ -245,6 +250,7 @@ fn main() -> anyhow::Result<()> {
                 no_install,
                 pm,
                 license_key,
+                extras,
             })?;
         }
         Commands::UpdateUi {
