@@ -76,7 +76,11 @@ pub fn apply_markers(content: &str, markers: &HashMap<String, String>) -> String
             result.push(line.to_string());
         }
     }
-    result.join("\n")
+    let mut out = result.join("\n");
+    if !out.is_empty() {
+        out.push('\n');
+    }
+    out
 }
 
 fn extract_marker(trimmed: &str) -> Option<&str> {

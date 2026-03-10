@@ -422,21 +422,15 @@ fn find_deps_insert_pos(content: &str) -> usize {
     if let Some(marker_pos) = content.find("# TAURIKIT:CARGO_DEPS") {
         return marker_pos;
     }
-    if let Some(deps_start) = content.find("\n[dependencies]") {
-        let after_header = deps_start + 1;
-        let mut pos = after_header;
-        let mut first = true;
-        for line in content[after_header..].lines() {
-            if first {
-                first = false;
-                pos += line.len() + 1;
-                continue;
-            }
-            if line.starts_with('[') {
-                return pos;
-            }
-            pos += line.len() + 1;
-        }
+    let search_from = if let Some(pos) = content.find("\n[dependencies]") {
+        pos + "\n[dependencies]".len()
+    } else if content.starts_with("[dependencies]") {
+        "[dependencies]".len()
+    } else {
+        return content.len();
+    };
+    if let Some(next) = content[search_from..].find("\n[") {
+        return search_from + next + 1;
     }
     content.len()
 }
