@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use colored::Colorize;
@@ -76,8 +78,17 @@ pub fn run(mut config: Config) -> Result<()> {
     let pm = collect_pm(&config)?;
     let pm_resolved = crate::doctor::ensure_package_manager(Some(&pm))?;
 
-    let template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
+    let mut template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
     let (auth_module, ui_module) = collect_modules(&config)?;
+
+    let auth_dir_check = template.join("auth").join(&auth_module);
+    let ui_dir_check = template.join("ui").join(&ui_module);
+    if (!auth_dir_check.is_dir() || !ui_dir_check.is_dir()) && config.template.is_none() {
+        if let Some(key) = config.license_key.as_deref() {
+            template = license::refresh_cache(key)?;
+        }
+    }
+
     let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
     let token_map = collect_tokens(&config, &auth_module, &ui_module, &pm_resolved)?;
     let slug = token_map["APP_SLUG"].clone();
@@ -125,6 +136,9 @@ pub fn run(mut config: Config) -> Result<()> {
         steps[7].status = StepStatus::Skipped;
     }
 
+    let install_ok = Arc::new(AtomicBool::new(!no_install));
+    let install_ok_c = install_ok.clone();
+
     let auth_module_c = auth_module.clone();
     let ui_module_c = ui_module.clone();
     let output_c = output.clone();
@@ -133,19 +147,30 @@ pub fn run(mut config: Config) -> Result<()> {
     let pm_c = pm_resolved.clone();
 
     crate::tui::generation::run_generation(&slug, steps, move |tx| {
+        let result = (|| -> anyhow::Result<()> {
         copy_overlay(&base_dir, &output_c)?;
         tx.send(WorkerMsg::StepDone(0)).ok();
 
         let auth_dir = template.join("auth").join(&auth_module_c);
-        if auth_dir.is_dir() {
-            copy_overlay(&auth_dir, &output_c)?;
+        if !auth_dir.is_dir() {
+            anyhow::bail!(
+                "Auth module '{}' not found in template at {}.\n\
+                 Delete {} and re-run to refresh the cache.",
+                auth_module_c, auth_dir.display(), template.display()
+            );
         }
+        copy_overlay(&auth_dir, &output_c)?;
         tx.send(WorkerMsg::StepDone(1)).ok();
 
         let ui_dir = template.join("ui").join(&ui_module_c);
-        if ui_dir.is_dir() {
-            copy_overlay(&ui_dir, &output_c)?;
+        if !ui_dir.is_dir() {
+            anyhow::bail!(
+                "UI module '{}' not found in template at {}.\n\
+                 Delete {} and re-run to refresh the cache.",
+                ui_module_c, ui_dir.display(), template.display()
+            );
         }
+        copy_overlay(&ui_dir, &output_c)?;
         tx.send(WorkerMsg::StepDone(2)).ok();
 
         let auth_config = overlay::load_module_config(&auth_dir.join("module.json"))?;
@@ -175,19 +200,28 @@ pub fn run(mut config: Config) -> Result<()> {
         if !no_git {
             match crate::hooks::git_init(&output_c) {
                 Ok(()) => tx.send(WorkerMsg::StepDone(6)).ok(),
-                Err(_) => tx.send(WorkerMsg::StepSkipped(6)).ok(),
+                Err(e) => tx.send(WorkerMsg::StepFailed(6, e.to_string())).ok(),
             };
         }
 
         if !no_install {
             match crate::hooks::install_deps(&output_c, &pm_c) {
                 Ok(()) => tx.send(WorkerMsg::StepDone(7)).ok(),
-                Err(_) => tx.send(WorkerMsg::StepSkipped(7)).ok(),
+                Err(e) => {
+                    install_ok_c.store(false, Ordering::Relaxed);
+                    tx.send(WorkerMsg::StepFailed(7, e.to_string())).ok()
+                }
             };
         }
 
         tx.send(WorkerMsg::AllDone).ok();
         Ok(())
+        })();
+
+        if result.is_err() {
+            let _ = std::fs::remove_dir_all(&output_c);
+        }
+        result
     })?;
 
     let needs_oauth = matches!(auth_module.as_str(), "github" | "google") && oauth_client_id.is_none();
@@ -247,6 +281,12 @@ pub fn run(mut config: Config) -> Result<()> {
             }
             _ => {}
         }
+    }
+    if !install_ok.load(Ordering::Relaxed) {
+        println!(
+            "   {}",
+            format!("{pm_resolved} install").truecolor(80, 200, 255).bold()
+        );
     }
     let dev_cmd = crate::doctor::pm_tauri_dev(&pm_resolved);
     println!(
@@ -460,8 +500,7 @@ fn copy_overlay(source: &Path, output: &Path) -> Result<()> {
             continue;
         }
 
-        // module.json is metadata — don't copy to output
-        if rel.file_name().map(|f| f == "module.json").unwrap_or(false) {
+        if rel.file_name().map(|f| f == "module.json" || f == ".sync-state.json").unwrap_or(false) {
             continue;
         }
 

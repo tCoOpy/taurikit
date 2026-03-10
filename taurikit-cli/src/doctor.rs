@@ -277,7 +277,7 @@ pub fn pm_run_prefix(pm: &str) -> &'static str {
 /// Returns the command the user should type to run tauri dev.
 pub fn pm_tauri_dev(pm: &str) -> &'static str {
     match pm {
-        "bun" => "bun tauri dev",
+        "bun" => "bun run tauri dev",
         "pnpm" => "pnpm tauri dev",
         "yarn" => "yarn tauri dev",
         _ => "npx tauri dev",
@@ -424,6 +424,8 @@ fn has_msvc() -> bool {
         if std::path::Path::new(path).exists() {
             let ok = Command::new(path)
                 .args([
+                    "-products",
+                    "*",
                     "-latest",
                     "-requires",
                     "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
@@ -494,10 +496,7 @@ pub fn ensure_msvc() -> Result<()> {
                 "install",
                 "Microsoft.VisualStudio.2022.BuildTools",
                 "--override",
-                "--wait --passive \
-                 --add Microsoft.VisualStudio.Workload.VCTools \
-                 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \
-                 --add Microsoft.VisualStudio.Component.Windows11SDK.22621",
+                "--wait --passive --add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows11SDK.22621",
                 "--accept-source-agreements",
                 "--accept-package-agreements",
             ])
@@ -518,14 +517,7 @@ pub fn ensure_msvc() -> Result<()> {
         .args([
             "-NoProfile",
             "-Command",
-            r#"$url = 'https://aka.ms/vs/17/release/vs_BuildTools.exe'; \
-               $out = "$env:TEMP\vs_BuildTools.exe"; \
-               Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; \
-               Start-Process -FilePath $out -ArgumentList '--wait','--passive', \
-                 '--add','Microsoft.VisualStudio.Workload.VCTools', \
-                 '--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64', \
-                 '--add','Microsoft.VisualStudio.Component.Windows11SDK.22621' \
-                 -Wait"#,
+            "$url = 'https://aka.ms/vs/17/release/vs_BuildTools.exe'; $out = \"$env:TEMP\\vs_BuildTools.exe\"; Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; Start-Process -FilePath $out -ArgumentList '--wait','--passive','--add','Microsoft.VisualStudio.Workload.VCTools','--add','Microsoft.VisualStudio.Component.VC.Tools.x86.x64','--add','Microsoft.VisualStudio.Component.Windows11SDK.22621' -Wait",
         ])
         .status()
         .map(|s| s.success())
@@ -597,10 +589,7 @@ pub fn ensure_webview2() -> Result<()> {
         .args([
             "-NoProfile",
             "-Command",
-            r#"$url = 'https://go.microsoft.com/fwlink/p/?LinkId=2124703'; \
-               $out = "$env:TEMP\MicrosoftEdgeWebview2Setup.exe"; \
-               Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; \
-               Start-Process -FilePath $out -ArgumentList '/silent','/install' -Wait"#,
+            "$url = 'https://go.microsoft.com/fwlink/p/?LinkId=2124703'; $out = \"$env:TEMP\\MicrosoftEdgeWebview2Setup.exe\"; Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; $proc = Start-Process -FilePath $out -ArgumentList '/silent','/install' -PassThru; if (!$proc.WaitForExit(900000)) { $proc.Kill(); exit 1 }; exit $proc.ExitCode",
         ])
         .status()
         .map(|s| s.success())
@@ -678,6 +667,9 @@ enum Distro {
     Debian,
     Fedora,
     Arch,
+    Suse,
+    Void,
+    Alpine,
     Unknown,
 }
 
@@ -689,6 +681,12 @@ fn detect_distro() -> Distro {
         Distro::Fedora
     } else if has_cmd("pacman") {
         Distro::Arch
+    } else if has_cmd("zypper") {
+        Distro::Suse
+    } else if has_cmd("xbps-install") {
+        Distro::Void
+    } else if has_cmd("apk") {
+        Distro::Alpine
     } else {
         Distro::Unknown
     }
@@ -723,6 +721,32 @@ fn linux_install_cmd(distro: &Distro) -> Option<(&'static str, &'static [&'stati
                 "libayatana-appindicator",
             ],
         )),
+        Distro::Suse => Some((
+            "zypper",
+            &[
+                "install", "-y", "pkg-config", "curl",
+                "webkit2gtk3-soup2-devel", "gtk3-devel",
+                "libsoup-devel", "libopenssl-devel",
+                "libappindicator3-devel",
+            ],
+        )),
+        Distro::Void => Some((
+            "xbps-install",
+            &[
+                "-Sy", "pkg-config", "curl",
+                "webkit2gtk-devel", "gtk+3-devel",
+                "libsoup3-devel", "openssl-devel",
+                "libayatana-appindicator-devel",
+            ],
+        )),
+        Distro::Alpine => Some((
+            "apk",
+            &[
+                "add", "pkgconf", "curl",
+                "webkit2gtk-dev", "gtk+3.0-dev",
+                "libsoup3-dev", "openssl-dev",
+            ],
+        )),
         Distro::Unknown => None,
     }
 }
@@ -733,6 +757,9 @@ fn linux_install_hint(distro: &Distro) -> String {
         Distro::Debian => "sudo apt install pkg-config libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libgtk-3-dev libsoup-3.0-dev libssl-dev libayatana-appindicator3-dev".into(),
         Distro::Fedora => "sudo dnf install pkg-config webkit2gtk4.1-devel javascriptcoregtk4.1-devel gtk3-devel libsoup3-devel openssl-devel libappindicator-gtk3-devel".into(),
         Distro::Arch => "sudo pacman -S pkgconf webkit2gtk-4.1 gtk3 libsoup3 openssl libayatana-appindicator".into(),
+        Distro::Suse => "sudo zypper install pkg-config webkit2gtk3-soup2-devel gtk3-devel libsoup-devel libopenssl-devel libappindicator3-devel".into(),
+        Distro::Void => "sudo xbps-install -Sy pkg-config webkit2gtk-devel gtk+3-devel libsoup3-devel openssl-devel libayatana-appindicator-devel".into(),
+        Distro::Alpine => "sudo apk add pkgconf webkit2gtk-dev gtk+3.0-dev libsoup3-dev openssl-dev".into(),
         Distro::Unknown => "see https://v2.tauri.app/start/prerequisites/#linux".into(),
     }
 }

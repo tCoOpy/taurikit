@@ -20,6 +20,10 @@ And these shared hooks:
 - `useKeyboardShortcut` — declarative keyboard shortcut binding
 - `useSettings` — app settings with Tauri backend persistence
 - `useTheme` — dark/light theme toggle (CSS class or data-theme)
+description: Choose between shadcn/ui, DaisyUI, or tesign for your app's component library.
+---
+
+TauriKit supports three UI frameworks. You choose one during project generation with `--ui <framework>`.
 
 ## shadcn/ui
 
@@ -79,17 +83,25 @@ daisyui: {
 }
 ```
 
-## Tesign
+## tesign
 
-Tesign is TauriKit's custom component library with a polished dark-first design using CSS variables and Tailwind utilities.
+[tesign](https://github.com/tCoOpy/tesign) (`@slideup/design`) is a custom component library with a shadcn-compatible API. It includes components adapted for desktop apps with built-in theming.
 
 ### What's included
 
-Tesign ships the same component set as shadcn/ui (Button, Card, Dialog, Input, etc.) with a distinct visual style.
+The overlay ships with adapted components: Button, Card, Input, Badge, Separator, Switch (Toggle), and TitleBar. These match the shadcn API surface so the rest of the scaffold works without changes.
 
-### Customization
+### Adding more components
 
-Theming is controlled via CSS variables in `src/index.css`, with `.dark` class toggling.
+```sh
+npx @slideup/design add [component-name]
+npx @slideup/design list          # see all available
+npx @slideup/design diff          # check for updates
+```
+
+### Theming
+
+tesign uses Tailwind CSS v4 with OKLCH color variables in `src/index.css`, similar to the shadcn theme system.
 
 ## Minimal
 

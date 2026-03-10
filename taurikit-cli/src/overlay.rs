@@ -103,9 +103,10 @@ pub fn merge_package_deps(
 
     for config in configs {
         if !config.npm_dev_dependencies.is_empty() {
-            let dev_deps = pkg
+            let obj = pkg
                 .as_object_mut()
-                .unwrap()
+                .context("package.json is not a JSON object")?;
+            let dev_deps = obj
                 .entry("devDependencies")
                 .or_insert_with(|| serde_json::json!({}));
             for (k, v) in &config.npm_dev_dependencies {
