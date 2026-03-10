@@ -22,7 +22,7 @@ app.use(
   cors({
     origin: ["https://taurikit.dev"],
     allowMethods: ["GET", "POST"],
-    allowHeaders: ["Content-Type", "Authorization"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Admin-Key"],
   })
 );
 

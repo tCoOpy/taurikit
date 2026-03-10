@@ -13,20 +13,33 @@ if (-not $AdminKey) { throw "Set ADMIN_KEY env var" }
 
 Write-Host "Packaging scaffold from ${ScaffoldDir}..."
 
-tar czf $TempFile `
-    -C $ScaffoldDir `
+if (Test-Path $TempFile) { Remove-Item $TempFile -Force }
+
+Push-Location $ScaffoldDir
+tar -czf $TempFile `
     --exclude='.git' `
     --exclude='node_modules' `
     --exclude='target' `
     --exclude='.claude' `
     --exclude='MEMORY.md' `
     base auth ui manifest.toml
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $TempFile)) {
+    Pop-Location
+    throw "tar failed to create $TempFile"
+}
+Pop-Location
+
+$ApiUrl = $ApiUrl.TrimEnd("/")
+if ($ApiUrl -notmatch '^https://') {
+    $ApiUrl = "https://$($ApiUrl -replace '^https?://', '')"
+}
 
 Write-Host "Uploading to API as v${Version}..."
 Invoke-RestMethod `
     -Method Post `
     -Uri "${ApiUrl}/template/upload?version=${Version}" `
-    -Headers @{ "X-Admin-Key" = $AdminKey; "Content-Type" = "application/gzip" } `
+    -Headers @{ "X-Admin-Key" = $AdminKey } `
+    -ContentType "application/gzip" `
     -InFile $TempFile
 
 Write-Host "Done - template v${Version} uploaded."
