@@ -423,16 +423,28 @@ fn find_deps_insert_pos(content: &str) -> usize {
         return marker_pos;
     }
     if let Some(deps_start) = content.find("\n[dependencies]") {
-        let after_deps = deps_start + 1;
-        for (i, line) in content[after_deps..].lines().enumerate() {
-            if i == 0 { continue; }
-            if line.starts_with('[') {
-                let offset = content[after_deps..].find(line).unwrap();
-                return after_deps + offset;
+        let after_header = deps_start + 1;
+        let mut pos = after_header;
+        let mut first = true;
+        for line in content[after_header..].lines() {
+            if first {
+                first = false;
+                pos += line.len() + 1;
+                continue;
             }
+            if line.starts_with('[') {
+                return pos;
+            }
+            pos += line.len() + 1;
         }
     }
     content.len()
+}
+
+fn ensure_newline_at(content: &mut String, pos: usize) {
+    if pos > 0 && content.as_bytes().get(pos - 1) != Some(&b'\n') {
+        content.insert(pos, '\n');
+    }
 }
 
 fn add_cargo_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
@@ -446,7 +458,9 @@ fn add_cargo_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
             continue;
         }
         let dep_line = format!("{} = {}\n", name, ver);
-        let insert_pos = find_deps_insert_pos(&content);
+        let mut insert_pos = find_deps_insert_pos(&content);
+        ensure_newline_at(&mut content, insert_pos);
+        insert_pos = find_deps_insert_pos(&content);
         content.insert_str(insert_pos, &dep_line);
     }
     fs::write(&cargo_path, content).context("Failed to write Cargo.toml")?;
@@ -554,7 +568,9 @@ fn add_cargo_deps(project: &Path, feature: &FeatureInfo) -> Result<()> {
         }
 
         let dep_line = format!("{} = {}\n", name, ver);
-        let insert_pos = find_deps_insert_pos(&content);
+        let mut insert_pos = find_deps_insert_pos(&content);
+        ensure_newline_at(&mut content, insert_pos);
+        insert_pos = find_deps_insert_pos(&content);
         content.insert_str(insert_pos, &dep_line);
     }
 
