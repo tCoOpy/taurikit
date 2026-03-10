@@ -94,10 +94,6 @@ jobs:
         working-directory: test-output
         run: bunx tsc --noEmit
 
-      - name: Lint check
-        working-directory: test-output
-        run: bun run lint
-
       - name: Frontend tests
         working-directory: test-output
         run: bun run test

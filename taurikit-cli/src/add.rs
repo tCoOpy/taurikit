@@ -418,6 +418,23 @@ fn add_npm_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
     Ok(())
 }
 
+fn find_deps_insert_pos(content: &str) -> usize {
+    if let Some(marker_pos) = content.find("# TAURIKIT:CARGO_DEPS") {
+        return marker_pos;
+    }
+    if let Some(deps_start) = content.find("\n[dependencies]") {
+        let after_deps = deps_start + 1;
+        for (i, line) in content[after_deps..].lines().enumerate() {
+            if i == 0 { continue; }
+            if line.starts_with('[') {
+                let offset = content[after_deps..].find(line).unwrap();
+                return after_deps + offset;
+            }
+        }
+    }
+    content.len()
+}
+
 fn add_cargo_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
     if feature.cargo_deps.is_empty() {
         return Ok(());
@@ -429,11 +446,8 @@ fn add_cargo_deps_silent(project: &Path, feature: &FeatureInfo) -> Result<()> {
             continue;
         }
         let dep_line = format!("{} = {}\n", name, ver);
-        if let Some(pos) = content.find("\n[build-dependencies]") {
-            content.insert_str(pos, &dep_line);
-        } else {
-            content.push_str(&dep_line);
-        }
+        let insert_pos = find_deps_insert_pos(&content);
+        content.insert_str(insert_pos, &dep_line);
     }
     fs::write(&cargo_path, content).context("Failed to write Cargo.toml")?;
     Ok(())
@@ -539,13 +553,9 @@ fn add_cargo_deps(project: &Path, feature: &FeatureInfo) -> Result<()> {
             continue;
         }
 
-        // Insert before last blank line or at end of [dependencies]
         let dep_line = format!("{} = {}\n", name, ver);
-        if let Some(pos) = content.find("\n[build-dependencies]") {
-            content.insert_str(pos, &dep_line);
-        } else {
-            content.push_str(&dep_line);
-        }
+        let insert_pos = find_deps_insert_pos(&content);
+        content.insert_str(insert_pos, &dep_line);
     }
 
     fs::write(&cargo_path, content).context("Failed to write Cargo.toml")?;
