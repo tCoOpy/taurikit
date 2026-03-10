@@ -23,6 +23,7 @@ fn ensure_stdin_tty() {
 #[cfg(not(unix))]
 fn ensure_stdin_tty() {}
 
+use crate::config;
 use crate::overlay;
 use crate::tokens::{self, TokenMap};
 use crate::tui::banner;
@@ -48,11 +49,18 @@ pub struct Config {
 }
 
 const AUTH_OPTIONS: &[&str] = &["github", "google", "none"];
-const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign"];
+const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign", "minimal"];
 const PM_OPTIONS: &[&str] = &["bun", "pnpm", "yarn", "npm"];
 
-pub fn run(config: Config) -> Result<()> {
+pub fn run(mut config: Config) -> Result<()> {
     ensure_stdin_tty();
+
+    let rc = config::load();
+    config.pm = config.pm.or(rc.defaults.pm);
+    config.auth = config.auth.or(rc.defaults.auth);
+    config.ui = config.ui.or(rc.defaults.ui);
+    config.author = config.author.or(rc.defaults.author);
+    config.license_key = config.license_key.or(rc.defaults.license_key);
 
     println!();
     banner::print_inline_banner();
@@ -540,6 +548,10 @@ fn write_manifest(output: &Path, token_map: &TokenMap, auth: &str, ui: &str) -> 
         fs::write(&manifest, content)?;
     }
     Ok(())
+}
+
+pub fn resolve_template_path(explicit: Option<PathBuf>, license_key: Option<&str>) -> Result<PathBuf> {
+    resolve_template(explicit, license_key)
 }
 
 fn resolve_template(explicit: Option<PathBuf>, license_key: Option<&str>) -> Result<PathBuf> {

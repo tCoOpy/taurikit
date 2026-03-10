@@ -1,9 +1,25 @@
 ---
 title: UI Frameworks
-description: Choose between shadcn/ui and DaisyUI for your app's component library.
+description: Choose between shadcn/ui, DaisyUI, Tesign, or Minimal for your app's component library.
 ---
 
-TauriKit supports two UI frameworks. You choose one during project generation with `--ui <framework>`.
+TauriKit supports four UI frameworks. You choose one during project generation with `--ui <framework>`, or switch later with `taurikit update-ui --switch <framework>`.
+
+All themes include these shared components out of the box:
+
+- `ErrorBoundary` — catches render errors with a fallback UI
+- `OnboardingTour` — multi-step first-launch welcome dialog
+- `SidebarLayout` — collapsible sidebar navigation
+- `Skeleton` — animated loading placeholder
+- `Spinner` — CSS-only loading spinner
+- `StatusBar` — bottom bar for status items and quick actions
+
+And these shared hooks:
+
+- `useAuth` — authentication state management
+- `useKeyboardShortcut` — declarative keyboard shortcut binding
+- `useSettings` — app settings with Tauri backend persistence
+- `useTheme` — dark/light theme toggle (CSS class or data-theme)
 
 ## shadcn/ui
 
@@ -62,3 +78,30 @@ daisyui: {
   themes: ["dark", "light", "cyberpunk"],
 }
 ```
+
+## Tesign
+
+Tesign is TauriKit's custom component library with a polished dark-first design using CSS variables and Tailwind utilities.
+
+### What's included
+
+Tesign ships the same component set as shadcn/ui (Button, Card, Dialog, Input, etc.) with a distinct visual style.
+
+### Customization
+
+Theming is controlled via CSS variables in `src/index.css`, with `.dark` class toggling.
+
+## Minimal
+
+Minimal is a zero-dependency theme using only Tailwind CSS utilities — no Radix, no DaisyUI plugin, no external component library.
+
+### What's included
+
+All core components (Button, Card, Dialog, Input, Badge, Switch, etc.) are implemented with pure Tailwind classes. The only runtime dependency is `lucide-react` for icons.
+
+### When to use it
+
+Choose Minimal when you want:
+- Full control over styling with no opinionated abstractions
+- Smallest possible bundle with no component library overhead
+- A clean starting point for building your own design system

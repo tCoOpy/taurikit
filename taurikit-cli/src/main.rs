@@ -1,11 +1,18 @@
+mod add;
+mod config;
 mod doctor;
+mod eject;
 mod generate;
 mod hooks;
+mod init;
 mod license;
 mod overlay;
+mod plugins;
+mod preview;
 mod tokens;
 mod tui;
 mod update_ui;
+mod upgrade;
 
 use std::path::PathBuf;
 
@@ -90,7 +97,7 @@ enum Commands {
 
     /// Update or switch the UI framework in an existing project
     UpdateUi {
-        /// Switch to a different UI framework: shadcn, daisyui, or tesign
+        /// Switch to a different UI framework: shadcn, daisyui, tesign, or minimal
         #[arg(long, value_name = "FRAMEWORK")]
         switch: Option<String>,
 
@@ -111,6 +118,90 @@ enum Commands {
         /// Show what would change without modifying files
         #[arg(long)]
         dry_run: bool,
+
+        /// Rollback to the previously used UI framework
+        #[arg(long)]
+        rollback: bool,
+    },
+
+    /// Add a Tauri plugin or feature to an existing project
+    Add {
+        /// Feature to add (e.g. notifications, clipboard, sql). Use "list" to see all.
+        feature: String,
+
+        /// Path to the project directory (defaults to current directory)
+        #[arg(long, short, value_name = "DIR")]
+        project: Option<PathBuf>,
+
+        /// Show what would change without modifying files
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Remove TauriKit metadata, leaving a clean standalone project
+    Eject {
+        /// Path to the project directory (defaults to current directory)
+        #[arg(long, short, value_name = "DIR")]
+        project: Option<PathBuf>,
+
+        /// Show what would change without modifying files
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Preview the file tree that would be generated
+    Preview {
+        /// Auth module: github, google, or none
+        #[arg(long, default_value = "none")]
+        auth: String,
+
+        /// UI framework: shadcn, daisyui, tesign, or minimal
+        #[arg(long, default_value = "shadcn")]
+        ui: String,
+
+        /// Path to the template directory
+        /// [env: TAURIKIT_TEMPLATE]
+        #[arg(long, env = "TAURIKIT_TEMPLATE", value_name = "DIR")]
+        template: Option<PathBuf>,
+
+        /// License key for template download
+        /// [env: TAURIKIT_LICENSE_KEY]
+        #[arg(long, env = "TAURIKIT_LICENSE_KEY", value_name = "KEY")]
+        license_key: Option<String>,
+    },
+
+    /// Check for and apply template updates to an existing project
+    Upgrade {
+        /// Path to the template directory
+        /// [env: TAURIKIT_TEMPLATE]
+        #[arg(long, env = "TAURIKIT_TEMPLATE", value_name = "DIR")]
+        template: Option<PathBuf>,
+
+        /// License key for template download
+        /// [env: TAURIKIT_LICENSE_KEY]
+        #[arg(long, env = "TAURIKIT_LICENSE_KEY", value_name = "KEY")]
+        license_key: Option<String>,
+
+        /// Overwrite locally modified files without prompting
+        #[arg(long)]
+        force: bool,
+
+        /// Show what would change without modifying files
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Initialize TauriKit in an existing Tauri project
+    Init {
+        /// Path to the project directory (defaults to current directory)
+        #[arg(long, short, value_name = "DIR")]
+        project: Option<PathBuf>,
+    },
+
+    /// Browse available Tauri plugins
+    Plugins {
+        /// Filter plugins by name or keyword
+        filter: Option<String>,
     },
 }
 
@@ -162,6 +253,7 @@ fn main() -> anyhow::Result<()> {
             license_key,
             force,
             dry_run,
+            rollback,
         } => {
             update_ui::run(update_ui::Config {
                 switch,
@@ -169,7 +261,60 @@ fn main() -> anyhow::Result<()> {
                 license_key,
                 force,
                 dry_run,
+                rollback,
             })?;
+        }
+        Commands::Add {
+            feature,
+            project,
+            dry_run,
+        } => {
+            add::run(add::Config {
+                feature,
+                project,
+                dry_run,
+            })?;
+        }
+        Commands::Eject {
+            project,
+            dry_run,
+        } => {
+            eject::run(eject::Config {
+                project,
+                dry_run,
+            })?;
+        }
+        Commands::Preview {
+            auth,
+            ui,
+            template,
+            license_key,
+        } => {
+            preview::run(preview::Config {
+                template,
+                auth,
+                ui,
+                license_key,
+            })?;
+        }
+        Commands::Upgrade {
+            template,
+            license_key,
+            force,
+            dry_run,
+        } => {
+            upgrade::run(upgrade::Config {
+                template,
+                license_key,
+                force,
+                dry_run,
+            })?;
+        }
+        Commands::Init { project } => {
+            init::run(init::Config { project })?;
+        }
+        Commands::Plugins { filter } => {
+            plugins::run(filter.as_deref());
         }
     }
 

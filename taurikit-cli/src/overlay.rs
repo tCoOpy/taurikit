@@ -26,9 +26,38 @@ pub fn load_module_config(path: &Path) -> Result<ModuleConfig> {
 
 pub fn apply_markers(content: &str, markers: &HashMap<String, String>) -> String {
     let mut result = Vec::new();
+    let mut skip_depth: usize = 0;
+
     for line in content.lines() {
         let trimmed = line.trim();
         if let Some(marker_name) = extract_marker(trimmed) {
+            if let Some(cond_key) = marker_name.strip_prefix("TAURIKIT:IF_") {
+                let active = markers.get(&format!("TAURIKIT:{cond_key}"))
+                    .map_or(false, |v| !v.is_empty());
+                if !active || skip_depth > 0 {
+                    skip_depth += 1;
+                }
+                continue;
+            }
+            if let Some(cond_key) = marker_name.strip_prefix("TAURIKIT:UNLESS_") {
+                let active = markers.get(&format!("TAURIKIT:{cond_key}"))
+                    .map_or(false, |v| !v.is_empty());
+                if active || skip_depth > 0 {
+                    skip_depth += 1;
+                }
+                continue;
+            }
+            if marker_name == "TAURIKIT:ENDIF" {
+                if skip_depth > 0 {
+                    skip_depth -= 1;
+                }
+                continue;
+            }
+
+            if skip_depth > 0 {
+                continue;
+            }
+
             if let Some(replacement) = markers.get(marker_name) {
                 if !replacement.is_empty() {
                     let indent = &line[..line.len() - trimmed.len()];
@@ -43,7 +72,7 @@ pub fn apply_markers(content: &str, markers: &HashMap<String, String>) -> String
                     }
                 }
             }
-        } else {
+        } else if skip_depth == 0 {
             result.push(line.to_string());
         }
     }

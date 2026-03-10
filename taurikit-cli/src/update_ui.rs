@@ -9,7 +9,7 @@ use crate::overlay;
 use crate::tokens;
 use crate::license;
 
-const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign"];
+const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign", "minimal"];
 
 pub struct Config {
     pub switch: Option<String>,
@@ -17,10 +17,12 @@ pub struct Config {
     pub license_key: Option<String>,
     pub force: bool,
     pub dry_run: bool,
+    pub rollback: bool,
 }
 
 struct ProjectManifest {
     current_ui: String,
+    previous_ui: Option<String>,
 }
 
 pub fn run(config: Config) -> Result<()> {
@@ -36,17 +38,31 @@ pub fn run(config: Config) -> Result<()> {
 
     let manifest = read_manifest(&manifest_path)?;
 
-    let target_ui = match &config.switch {
-        Some(ui) => {
-            if !UI_OPTIONS.contains(&ui.as_str()) {
-                anyhow::bail!(
-                    "Invalid UI framework '{ui}'. Options: {}",
-                    UI_OPTIONS.join(", ")
+    let target_ui = if config.rollback {
+        match &manifest.previous_ui {
+            Some(prev) => {
+                println!(
+                    "\n  {} rolling back to {}",
+                    "Rollback:".truecolor(255, 191, 0).bold(),
+                    prev.truecolor(80, 200, 255).bold(),
                 );
+                prev.clone()
             }
-            ui.clone()
+            None => anyhow::bail!("No previous UI framework to roll back to."),
         }
-        None => manifest.current_ui.clone(),
+    } else {
+        match &config.switch {
+            Some(ui) => {
+                if !UI_OPTIONS.contains(&ui.as_str()) {
+                    anyhow::bail!(
+                        "Invalid UI framework '{ui}'. Options: {}",
+                        UI_OPTIONS.join(", ")
+                    );
+                }
+                ui.clone()
+            }
+            None => manifest.current_ui.clone(),
+        }
     };
 
     let switching = target_ui != manifest.current_ui;
@@ -129,6 +145,7 @@ pub fn run(config: Config) -> Result<()> {
     )?;
 
     if switching {
+        set_manifest_previous_ui(&manifest_path, &manifest.current_ui)?;
         update_manifest_ui(&manifest_path, &manifest.current_ui, &target_ui)?;
     }
 
@@ -285,7 +302,31 @@ fn read_manifest(path: &Path) -> Result<ProjectManifest> {
     let content = fs::read_to_string(path).context("Failed to read manifest.toml")?;
     let ui = extract_toml_value(&content, "modules.ui", "selected")
         .context("manifest.toml missing [modules.ui] selected")?;
-    Ok(ProjectManifest { current_ui: ui })
+    let previous_ui = extract_toml_value(&content, "modules.ui", "previous");
+    Ok(ProjectManifest { current_ui: ui, previous_ui })
+}
+
+fn set_manifest_previous_ui(path: &Path, previous: &str) -> Result<()> {
+    let content = fs::read_to_string(path)?;
+    let key_line = format!("previous = \"{}\"", previous);
+
+    if let Some(existing) = extract_toml_value(&content, "modules.ui", "previous") {
+        let old = format!("previous = \"{}\"", existing);
+        let updated = content.replace(&old, &key_line);
+        fs::write(path, updated)?;
+    } else {
+        let section = "[modules.ui]";
+        if let Some(pos) = content.find(section) {
+            let insert_pos = pos + section.len();
+            let mut new_content = String::with_capacity(content.len() + key_line.len() + 2);
+            new_content.push_str(&content[..insert_pos]);
+            new_content.push('\n');
+            new_content.push_str(&key_line);
+            new_content.push_str(&content[insert_pos..]);
+            fs::write(path, new_content)?;
+        }
+    }
+    Ok(())
 }
 
 fn manifest_auth(path: &Path) -> Result<String> {
