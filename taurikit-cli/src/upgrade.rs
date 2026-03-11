@@ -49,14 +49,14 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(
         "  {} project={}, template={}",
-        "Upgrade check:".truecolor(255, 191, 0).bold(),
-        project_version.truecolor(180, 180, 190),
-        template_version.truecolor(80, 200, 255).bold(),
+        "Upgrade check:".truecolor(161, 161, 170).bold(),
+        project_version.truecolor(113, 113, 122),
+        template_version.truecolor(6, 182, 212).bold(),
     );
     println!(
         "  auth={}, ui={}",
-        auth_module.truecolor(80, 200, 255),
-        ui_module.truecolor(80, 200, 255),
+        auth_module.truecolor(6, 182, 212),
+        ui_module.truecolor(6, 182, 212),
     );
     println!();
 
@@ -78,7 +78,7 @@ pub fn run(config: Config) -> Result<()> {
     if outdated.is_empty() {
         println!(
             "  {} All files are up to date with the template.",
-            "✓".truecolor(80, 220, 100).bold()
+            "✓".truecolor(34, 197, 94).bold()
         );
         println!();
         return Ok(());
@@ -101,14 +101,14 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(
         "  {} {} new, {} modified, {} missing from template",
-        "Summary:".truecolor(255, 191, 0),
+        "Summary:".truecolor(161, 161, 170),
         added, modified, missing,
     );
 
     if config.dry_run {
         println!(
             "\n  {} Dry run — no files modified.",
-            "ℹ".truecolor(80, 200, 255).bold()
+            "ℹ".truecolor(6, 182, 212).bold()
         );
         println!();
         return Ok(());
@@ -117,13 +117,13 @@ pub fn run(config: Config) -> Result<()> {
     if modified > 0 && !config.force {
         println!(
             "\n  {} {} file(s) have local modifications that will be overwritten.",
-            "⚠".truecolor(255, 220, 60).bold(),
+            "⚠".truecolor(234, 179, 8).bold(),
             modified,
         );
         println!(
             "  Use {} to overwrite, or {} to preview.",
-            "--force".truecolor(80, 200, 255),
-            "--dry-run".truecolor(80, 200, 255),
+            "--force".truecolor(6, 182, 212),
+            "--dry-run".truecolor(6, 182, 212),
         );
         anyhow::bail!("Aborted — use --force to overwrite local changes.");
     }
@@ -148,13 +148,13 @@ pub fn run(config: Config) -> Result<()> {
 
     println!(
         "\n  {} {} file(s) updated to template v{}.",
-        "✓".truecolor(80, 220, 100).bold(),
+        "✓".truecolor(34, 197, 94).bold(),
         applied,
         template_version,
     );
     println!(
         "\n  {} Run your package manager's install command to sync dependencies.",
-        "→".truecolor(80, 200, 255).bold(),
+        "→".truecolor(6, 182, 212).bold(),
     );
     println!();
 

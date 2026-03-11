@@ -162,8 +162,8 @@ pub fn run(filter: Option<&str>) {
     println!();
     println!(
         "  {} {}",
-        "Tauri v2 Plugins".truecolor(255, 191, 0).bold(),
-        format!("({} plugins)", PLUGINS.len()).truecolor(100, 100, 120)
+        "Tauri v2 Plugins".truecolor(161, 161, 170).bold(),
+        format!("({} plugins)", PLUGINS.len()).truecolor(113, 113, 122)
     );
     println!();
 
@@ -180,32 +180,32 @@ pub fn run(filter: Option<&str>) {
 
         print!(
             "  {} {}",
-            p.name.truecolor(80, 200, 255).bold(),
-            format!("— {}", p.description).truecolor(180, 180, 190),
+            p.name.truecolor(6, 182, 212).bold(),
+            format!("— {}", p.description).truecolor(113, 113, 122),
         );
 
         if let Some(feat) = p.add_feature {
             print!(
                 "  {}",
-                format!("[taurikit add {}]", feat).truecolor(80, 220, 100),
+                format!("[taurikit add {}]", feat).truecolor(34, 197, 94),
             );
         }
         println!();
 
         println!(
             "    {} {} | {}",
-            "crates:".truecolor(100, 100, 120),
-            p.crate_name.truecolor(220, 220, 230),
-            p.npm_name.truecolor(220, 220, 230),
+            "crates:".truecolor(113, 113, 122),
+            p.crate_name.truecolor(228, 228, 231),
+            p.npm_name.truecolor(228, 228, 231),
         );
     }
 
     println!();
     println!(
         "  {} {}",
-        "Tip:".truecolor(255, 191, 0),
+        "Tip:".truecolor(161, 161, 170),
         "Use `taurikit add <feature>` for one-command installation of supported plugins."
-            .truecolor(180, 180, 190)
+            .truecolor(113, 113, 122)
     );
     println!();
 }

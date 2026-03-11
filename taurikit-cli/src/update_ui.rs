@@ -43,8 +43,8 @@ pub fn run(config: Config) -> Result<()> {
             Some(prev) => {
                 println!(
                     "\n  {} rolling back to {}",
-                    "Rollback:".truecolor(255, 191, 0).bold(),
-                    prev.truecolor(80, 200, 255).bold(),
+                    "Rollback:".truecolor(161, 161, 170).bold(),
+                    prev.truecolor(6, 182, 212).bold(),
                 );
                 prev.clone()
             }
@@ -71,15 +71,15 @@ pub fn run(config: Config) -> Result<()> {
     if switching {
         println!(
             "  {} {} → {}",
-            "Switching UI:".truecolor(255, 191, 0).bold(),
-            manifest.current_ui.truecolor(100, 100, 120),
-            target_ui.truecolor(80, 200, 255).bold(),
+            "Switching UI:".truecolor(161, 161, 170).bold(),
+            manifest.current_ui.truecolor(113, 113, 122),
+            target_ui.truecolor(6, 182, 212).bold(),
         );
     } else {
         println!(
             "  {} {}",
-            "Updating UI:".truecolor(255, 191, 0).bold(),
-            target_ui.truecolor(80, 200, 255).bold(),
+            "Updating UI:".truecolor(161, 161, 170).bold(),
+            target_ui.truecolor(6, 182, 212).bold(),
         );
     }
 
@@ -108,7 +108,7 @@ pub fn run(config: Config) -> Result<()> {
     if changes.is_empty() {
         println!(
             "\n  {} All UI files are already up to date.",
-            "✓".truecolor(80, 220, 100).bold()
+            "✓".truecolor(34, 197, 94).bold()
         );
         return Ok(());
     }
@@ -119,13 +119,13 @@ pub fn run(config: Config) -> Result<()> {
     if modified_count > 0 && !config.force && !config.dry_run {
         println!(
             "\n  {} {} file(s) have local modifications that will be overwritten.",
-            "⚠".truecolor(255, 220, 60).bold(),
+            "⚠".truecolor(234, 179, 8).bold(),
             modified_count,
         );
         println!(
             "  Use {} to overwrite, or {} to preview.",
-            "--force".truecolor(80, 200, 255),
-            "--dry-run".truecolor(80, 200, 255),
+            "--force".truecolor(6, 182, 212),
+            "--dry-run".truecolor(6, 182, 212),
         );
         anyhow::bail!("Aborted — use --force to overwrite local changes.");
     }
@@ -133,7 +133,7 @@ pub fn run(config: Config) -> Result<()> {
     if config.dry_run {
         println!(
             "\n  {} Dry run complete — no files were changed.",
-            "ℹ".truecolor(80, 200, 255).bold()
+            "ℹ".truecolor(6, 182, 212).bold()
         );
         return Ok(());
     }
@@ -162,13 +162,13 @@ pub fn run(config: Config) -> Result<()> {
     let applied = changes.len();
     println!(
         "\n  {} {} file(s) updated.",
-        "✓".truecolor(80, 220, 100).bold(),
+        "✓".truecolor(34, 197, 94).bold(),
         applied
     );
 
     println!(
         "\n  {} Run your package manager's install command to sync dependencies.",
-        "→".truecolor(80, 200, 255).bold(),
+        "→".truecolor(6, 182, 212).bold(),
     );
     println!();
 

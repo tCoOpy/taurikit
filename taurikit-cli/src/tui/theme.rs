@@ -1,22 +1,26 @@
 use ratatui::style::{Color, Modifier, Style};
 
-pub const ORANGE: Color = Color::Rgb(255, 140, 50);
-pub const AMBER: Color = Color::Rgb(255, 191, 0);
-pub const _RUST: Color = Color::Rgb(183, 65, 14);
-pub const CYAN: Color = Color::Rgb(80, 200, 255);
-pub const GREEN: Color = Color::Rgb(80, 220, 100);
-pub const RED: Color = Color::Rgb(240, 70, 70);
-pub const _YELLOW: Color = Color::Rgb(255, 220, 60);
-pub const DIM: Color = Color::Rgb(100, 100, 120);
-pub const TEXT: Color = Color::Rgb(220, 220, 230);
-pub const BG: Color = Color::Rgb(20, 20, 30);
+pub const ACCENT: Color = Color::Rgb(6, 182, 212);
+pub const ACCENT_DIM: Color = Color::Rgb(14, 116, 144);
+pub const GREEN: Color = Color::Rgb(34, 197, 94);
+pub const RED: Color = Color::Rgb(239, 68, 68);
+pub const DIM: Color = Color::Rgb(113, 113, 122);
+pub const TEXT: Color = Color::Rgb(228, 228, 231);
+pub const MUTED: Color = Color::Rgb(161, 161, 170);
+pub const BG: Color = Color::Rgb(9, 9, 11);
+pub const SURFACE: Color = Color::Rgb(24, 24, 27);
+pub const BORDER_COLOR: Color = Color::Rgb(39, 39, 42);
 
 pub fn title() -> Style {
-    Style::default().fg(ORANGE).add_modifier(Modifier::BOLD)
+    Style::default().fg(TEXT).add_modifier(Modifier::BOLD)
 }
 
 pub fn subtitle() -> Style {
-    Style::default().fg(AMBER)
+    Style::default().fg(MUTED)
+}
+
+pub fn accent() -> Style {
+    Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)
 }
 
 pub fn success() -> Style {
@@ -24,7 +28,7 @@ pub fn success() -> Style {
 }
 
 pub fn running() -> Style {
-    Style::default().fg(CYAN).add_modifier(Modifier::BOLD)
+    Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)
 }
 
 pub fn pending() -> Style {
@@ -36,17 +40,29 @@ pub fn error() -> Style {
 }
 
 pub fn progress_filled() -> Style {
-    Style::default().fg(ORANGE)
+    Style::default().fg(ACCENT)
 }
 
 pub fn text() -> Style {
     Style::default().fg(TEXT)
 }
 
+pub fn muted() -> Style {
+    Style::default().fg(MUTED)
+}
+
 pub fn border() -> Style {
-    Style::default().fg(Color::Rgb(60, 60, 80))
+    Style::default().fg(BORDER_COLOR)
 }
 
 pub fn border_highlight() -> Style {
-    Style::default().fg(ORANGE)
+    Style::default().fg(ACCENT)
+}
+
+pub fn selected() -> Style {
+    Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)
+}
+
+pub fn hint() -> Style {
+    Style::default().fg(DIM)
 }

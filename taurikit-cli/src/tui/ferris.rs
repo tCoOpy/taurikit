@@ -14,21 +14,21 @@ pub const ART: &str = r#"
 "#;
 
 const WAVE_PALETTE: [Color; 6] = [
-    Color::Rgb(255, 140, 50),  // orange
-    Color::Rgb(255, 170, 60),
-    Color::Rgb(255, 200, 80),
-    Color::Rgb(255, 170, 60),
-    Color::Rgb(255, 140, 50),
-    Color::Rgb(230, 120, 40),
+    Color::Rgb(6, 182, 212),
+    Color::Rgb(22, 198, 228),
+    Color::Rgb(46, 212, 238),
+    Color::Rgb(22, 198, 228),
+    Color::Rgb(6, 182, 212),
+    Color::Rgb(8, 145, 178),
 ];
 
 const CELEBRATE_PALETTE: [Color; 6] = [
-    Color::Rgb(80, 220, 100),  // green
-    Color::Rgb(80, 200, 255),  // cyan
-    Color::Rgb(255, 140, 50),  // orange
-    Color::Rgb(255, 220, 60),  // yellow
-    Color::Rgb(80, 220, 100),
-    Color::Rgb(80, 200, 255),
+    Color::Rgb(34, 197, 94),
+    Color::Rgb(6, 182, 212),
+    Color::Rgb(34, 197, 94),
+    Color::Rgb(6, 182, 212),
+    Color::Rgb(34, 197, 94),
+    Color::Rgb(6, 182, 212),
 ];
 
 pub fn line_color(line_idx: usize, tick: usize, celebrating: bool) -> Color {

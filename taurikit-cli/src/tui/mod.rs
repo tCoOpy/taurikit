@@ -2,6 +2,8 @@ pub mod banner;
 pub mod ferris;
 pub mod generation;
 pub mod theme;
+pub mod widgets;
+pub mod wizard;
 
 use std::io::{self, stdout};
 use std::panic;

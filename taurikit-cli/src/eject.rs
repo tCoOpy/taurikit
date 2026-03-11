@@ -44,8 +44,8 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(
         "  {} {}",
-        "Ejecting project:".truecolor(255, 191, 0),
-        project.display().to_string().truecolor(220, 220, 230)
+        "Ejecting project:".truecolor(161, 161, 170),
+        project.display().to_string().truecolor(228, 228, 231)
     );
     println!();
 
@@ -58,8 +58,8 @@ pub fn run(config: Config) -> Result<()> {
             if config.dry_run {
                 println!(
                     "  {} would remove {}",
-                    "dry-run:".truecolor(100, 180, 255),
-                    filename.truecolor(220, 220, 230)
+                    "dry-run:".truecolor(6, 182, 212),
+                    filename.truecolor(228, 228, 231)
                 );
             } else {
                 fs::remove_file(&path)
@@ -109,8 +109,8 @@ pub fn run(config: Config) -> Result<()> {
             if config.dry_run {
                 println!(
                     "  {} would clean markers from {}",
-                    "dry-run:".truecolor(100, 180, 255),
-                    rel.display().to_string().truecolor(220, 220, 230)
+                    "dry-run:".truecolor(6, 182, 212),
+                    rel.display().to_string().truecolor(228, 228, 231)
                 );
             } else {
                 fs::write(entry.path(), &cleaned)
@@ -124,24 +124,24 @@ pub fn run(config: Config) -> Result<()> {
     if config.dry_run {
         println!(
             "  {} {} file(s) to remove, {} file(s) to clean",
-            "Summary:".truecolor(255, 191, 0),
+            "Summary:".truecolor(161, 161, 170),
             removed_files.len(),
             cleaned_files.len()
         );
         println!(
             "  Run without {} to apply changes.",
-            "--dry-run".truecolor(220, 220, 230)
+            "--dry-run".truecolor(228, 228, 231)
         );
     } else {
         println!(
             "  {} Removed {} TauriKit file(s), cleaned markers from {} file(s).",
-            "✓".truecolor(80, 250, 123),
+            "✓".truecolor(34, 197, 94),
             removed_files.len(),
             cleaned_files.len()
         );
         println!(
             "  {}",
-            "Project ejected — TauriKit metadata has been removed.".truecolor(180, 180, 190)
+            "Project ejected — TauriKit metadata has been removed.".truecolor(113, 113, 122)
         );
     }
     println!();

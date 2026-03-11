@@ -30,9 +30,9 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(
         "  {} auth={}, ui={}",
-        "Preview:".truecolor(255, 191, 0),
-        config.auth.truecolor(80, 200, 255).bold(),
-        config.ui.truecolor(80, 200, 255).bold()
+        "Preview:".truecolor(161, 161, 170),
+        config.auth.truecolor(6, 182, 212).bold(),
+        config.ui.truecolor(6, 182, 212).bold()
     );
     println!();
 
@@ -58,7 +58,7 @@ pub fn run(config: Config) -> Result<()> {
             if !dir.is_empty() && dirs_printed.insert(dir.clone()) {
                 println!(
                     "  {}",
-                    format!("{}/", dir).truecolor(100, 180, 255)
+                    format!("{}/", dir).truecolor(6, 182, 212)
                 );
             }
         }
@@ -68,14 +68,14 @@ pub fn run(config: Config) -> Result<()> {
         println!(
             "{}{}",
             indent,
-            name.truecolor(220, 220, 230)
+            name.truecolor(228, 228, 231)
         );
     }
 
     println!();
     println!(
         "  {} {} file(s) would be generated",
-        "Total:".truecolor(255, 191, 0),
+        "Total:".truecolor(161, 161, 170),
         files.len()
     );
     println!();

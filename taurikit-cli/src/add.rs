@@ -277,14 +277,14 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(
         "  {} {}",
-        "Adding feature:".truecolor(255, 191, 0),
-        feature.name.truecolor(80, 200, 255).bold()
+        "Adding feature:".truecolor(161, 161, 170),
+        feature.name.truecolor(6, 182, 212).bold()
     );
-    println!("  {}", feature.description.truecolor(180, 180, 190));
+    println!("  {}", feature.description.truecolor(113, 113, 122));
     println!();
 
     if config.dry_run {
-        println!("  {} (dry run — no files modified)", "Preview:".truecolor(255, 191, 0));
+        println!("  {} (dry run — no files modified)", "Preview:".truecolor(161, 161, 170));
         println!();
         print_plan(feature);
         return Ok(());
@@ -298,25 +298,25 @@ pub fn run(config: Config) -> Result<()> {
     println!();
     println!(
         "  {} {} added",
-        "✓".truecolor(80, 220, 100).bold(),
-        feature.name.truecolor(80, 200, 255).bold()
+        "✓".truecolor(34, 197, 94).bold(),
+        feature.name.truecolor(6, 182, 212).bold()
     );
     println!();
 
     if let Some(first_dep) = feature.npm_deps.first() {
         println!(
             "  {} Run your package manager's install command, then use the plugin:",
-            "Next:".truecolor(255, 191, 0)
+            "Next:".truecolor(161, 161, 170)
         );
         println!(
             "  {}",
             format!("  import {{ ... }} from \"{}\"", first_dep.0)
-                .truecolor(220, 220, 230)
+                .truecolor(228, 228, 231)
         );
     } else {
         println!(
             "  {} Feature configured. Restart your dev server to apply changes.",
-            "Next:".truecolor(255, 191, 0)
+            "Next:".truecolor(161, 161, 170)
         );
     }
     println!();
@@ -326,19 +326,19 @@ pub fn run(config: Config) -> Result<()> {
 
 fn print_available_features() {
     println!();
-    println!("  {} ", "Available features:".truecolor(255, 191, 0).bold());
+    println!("  {} ", "Available features:".truecolor(161, 161, 170).bold());
     println!();
     for f in FEATURES {
         println!(
             "    {}  {}",
-            f.name.truecolor(80, 200, 255).bold(),
-            f.description.truecolor(180, 180, 190)
+            f.name.truecolor(6, 182, 212).bold(),
+            f.description.truecolor(113, 113, 122)
         );
     }
     println!();
     println!(
         "  Usage: {}",
-        "taurikit add <feature>".truecolor(220, 220, 230)
+        "taurikit add <feature>".truecolor(228, 228, 231)
     );
     println!();
 }
@@ -538,7 +538,7 @@ fn add_npm_deps(project: &Path, feature: &FeatureInfo) -> Result<()> {
 
     let output = serde_json::to_string_pretty(&pkg)?;
     fs::write(&pkg_path, output).context("Failed to write package.json")?;
-    println!("    {} package.json", "✓".truecolor(80, 220, 100));
+    println!("    {} package.json", "✓".truecolor(34, 197, 94));
     Ok(())
 }
 
@@ -555,7 +555,7 @@ fn add_cargo_deps(project: &Path, feature: &FeatureInfo) -> Result<()> {
         if content.contains(&format!("{name} =")) || content.contains(&format!("{name}=")) {
             println!(
                 "    {} {} already in Cargo.toml",
-                "–".truecolor(255, 191, 0),
+                "–".truecolor(161, 161, 170),
                 name
             );
             continue;
@@ -569,7 +569,7 @@ fn add_cargo_deps(project: &Path, feature: &FeatureInfo) -> Result<()> {
     }
 
     fs::write(&cargo_path, content).context("Failed to write Cargo.toml")?;
-    println!("    {} Cargo.toml", "✓".truecolor(80, 220, 100));
+    println!("    {} Cargo.toml", "✓".truecolor(34, 197, 94));
     Ok(())
 }
 
@@ -592,7 +592,7 @@ fn add_tauri_plugin(project: &Path, feature: &FeatureInfo) -> Result<()> {
         if content.contains(plugin) {
             println!(
                 "    {} {} already in lib.rs",
-                "–".truecolor(255, 191, 0),
+                "–".truecolor(161, 161, 170),
                 plugin
             );
             continue;
@@ -605,7 +605,7 @@ fn add_tauri_plugin(project: &Path, feature: &FeatureInfo) -> Result<()> {
     }
 
     fs::write(&lib_path, content).context("Failed to write lib.rs")?;
-    println!("    {} lib.rs", "✓".truecolor(80, 220, 100));
+    println!("    {} lib.rs", "✓".truecolor(34, 197, 94));
     Ok(())
 }
 
@@ -637,6 +637,6 @@ fn add_capabilities(project: &Path, feature: &FeatureInfo) -> Result<()> {
 
     let output = serde_json::to_string_pretty(&cap)?;
     fs::write(&cap_path, output).context("Failed to write capabilities/default.json")?;
-    println!("    {} capabilities/default.json", "✓".truecolor(80, 220, 100));
+    println!("    {} capabilities/default.json", "✓".truecolor(34, 197, 94));
     Ok(())
 }

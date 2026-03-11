@@ -3,7 +3,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use ratatui::layout::{Alignment, Constraint, Layout, Rect};
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span, Text};
 use ratatui::widgets::{Block, Borders, Gauge, Padding, Paragraph, Wrap};
 
@@ -209,7 +209,7 @@ impl GenerationView {
             .split(header_inner);
 
         let title = Line::from(vec![
-            Span::styled("  🦀 TauriKit ", theme::title()),
+            Span::styled("  TauriKit ", theme::title()),
             Span::styled(
                 format!("v{}", env!("CARGO_PKG_VERSION")),
                 theme::subtitle(),
@@ -218,7 +218,7 @@ impl GenerationView {
         frame.render_widget(Paragraph::new(title), chunks[0]);
 
         let subtitle_text = if self.celebrating {
-            "  ✨ Project ready!"
+            "  Done!"
         } else {
             "  Building"
         };
@@ -226,10 +226,8 @@ impl GenerationView {
             Span::styled(subtitle_text, theme::text()),
             if !self.celebrating {
                 Span::styled(
-                    format!(": {}", self.app_slug),
-                    Style::default()
-                        .fg(theme::CYAN)
-                        .add_modifier(Modifier::BOLD),
+                    format!(" {}", self.app_slug),
+                    theme::accent(),
                 )
             } else {
                 Span::raw("")

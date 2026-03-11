@@ -69,16 +69,16 @@ fn cmd_exists(cmd: &str) -> bool {
 fn print_action(msg: &str) {
     println!(
         "  {} {}",
-        "→".truecolor(80, 200, 255).bold(),
-        msg.truecolor(220, 220, 230),
+        "→".truecolor(6, 182, 212).bold(),
+        msg.truecolor(228, 228, 231),
     );
 }
 
 fn print_ok(msg: &str) {
     println!(
         "  {} {}",
-        "✓".truecolor(80, 220, 100).bold(),
-        msg.truecolor(80, 220, 100),
+        "✓".truecolor(34, 197, 94).bold(),
+        msg.truecolor(34, 197, 94),
     );
 }
 
@@ -185,9 +185,9 @@ pub fn ensure_rust_version() -> Result<()> {
         Some(version) => {
             println!(
                 "\n  {} {}: {}",
-                "!".truecolor(255, 220, 60).bold(),
-                "Rust".truecolor(255, 220, 60),
-                format!("{version} — requires rustc ≥ 1.88.0").truecolor(180, 180, 190),
+                "!".truecolor(234, 179, 8).bold(),
+                "Rust".truecolor(234, 179, 8),
+                format!("{version} — requires rustc ≥ 1.88.0").truecolor(113, 113, 122),
             );
             if !has_rustup() {
                 install_rustup()?;
@@ -197,9 +197,9 @@ pub fn ensure_rust_version() -> Result<()> {
         None => {
             println!(
                 "\n  {} {}: {}",
-                "!".truecolor(255, 220, 60).bold(),
-                "Rust".truecolor(255, 220, 60),
-                "not found".truecolor(180, 180, 190),
+                "!".truecolor(234, 179, 8).bold(),
+                "Rust".truecolor(234, 179, 8),
+                "not found".truecolor(113, 113, 122),
             );
             if !has_rustup() {
                 install_rustup()?;
@@ -364,9 +364,9 @@ pub fn ensure_xcode_clt() -> Result<()> {
 
     println!(
         "\n  {} {}: {}",
-        "!".truecolor(255, 220, 60).bold(),
-        "Xcode CLT".truecolor(255, 220, 60),
-        "not found".truecolor(180, 180, 190),
+        "!".truecolor(234, 179, 8).bold(),
+        "Xcode CLT".truecolor(234, 179, 8),
+        "not found".truecolor(113, 113, 122),
     );
     print_action("Installing Xcode Command Line Tools…");
     println!("    A system dialog may appear — click \"Install\" to continue.\n");
@@ -393,7 +393,7 @@ pub fn ensure_xcode_clt() -> Result<()> {
         }
         println!(
             "    {} waiting for Xcode CLT installer…",
-            "⏳".truecolor(180, 180, 190)
+            "⏳".truecolor(113, 113, 122)
         );
         std::thread::sleep(poll_interval);
     }
@@ -481,9 +481,9 @@ pub fn ensure_msvc() -> Result<()> {
 
     println!(
         "\n  {} {}: {}",
-        "!".truecolor(255, 220, 60).bold(),
-        "MSVC Build Tools".truecolor(255, 220, 60),
-        "not found".truecolor(180, 180, 190),
+        "!".truecolor(234, 179, 8).bold(),
+        "MSVC Build Tools".truecolor(234, 179, 8),
+        "not found".truecolor(113, 113, 122),
     );
 
     // Try winget first
@@ -579,9 +579,9 @@ pub fn ensure_webview2() -> Result<()> {
 
     println!(
         "\n  {} {}: {}",
-        "!".truecolor(255, 220, 60).bold(),
-        "WebView2".truecolor(255, 220, 60),
-        "not found".truecolor(180, 180, 190),
+        "!".truecolor(234, 179, 8).bold(),
+        "WebView2".truecolor(234, 179, 8),
+        "not found".truecolor(113, 113, 122),
     );
     print_action("Installing WebView2 runtime…");
 
@@ -842,16 +842,16 @@ pub fn ensure_linux_deps() -> Result<()> {
 
     println!(
         "\n  {} {}: {}",
-        "!".truecolor(255, 220, 60).bold(),
-        "Linux deps".truecolor(255, 220, 60),
-        format!("missing: {}", missing.join(", ")).truecolor(180, 180, 190),
+        "!".truecolor(234, 179, 8).bold(),
+        "Linux deps".truecolor(234, 179, 8),
+        format!("missing: {}", missing.join(", ")).truecolor(113, 113, 122),
     );
 
     if linux_install_cmd(&distro).is_none() {
         println!(
             "\n  {} {}\n",
-            "→".truecolor(80, 200, 255).bold(),
-            "see https://v2.tauri.app/start/prerequisites/#linux".truecolor(220, 220, 230),
+            "→".truecolor(6, 182, 212).bold(),
+            "see https://v2.tauri.app/start/prerequisites/#linux".truecolor(228, 228, 231),
         );
         anyhow::bail!(
             "Could not detect your package manager. Install the missing libraries manually, then run `taurikit new` again."
@@ -867,8 +867,8 @@ pub fn ensure_linux_deps() -> Result<()> {
     if !should_install {
         println!(
             "\n  {} {}\n",
-            "→".truecolor(80, 200, 255).bold(),
-            linux_install_hint(&distro).truecolor(220, 220, 230),
+            "→".truecolor(6, 182, 212).bold(),
+            linux_install_hint(&distro).truecolor(228, 228, 231),
         );
         anyhow::bail!(
             "Install the missing system libraries listed above, then run `taurikit new` again."
@@ -928,9 +928,9 @@ fn check_rust() -> Check {
 
     println!(
         "\n  {} {}: {}",
-        "!".truecolor(255, 220, 60).bold(),
-        "Rust".truecolor(255, 220, 60),
-        format!("{version} — requires rustc ≥ 1.88.0").truecolor(180, 180, 190),
+        "!".truecolor(234, 179, 8).bold(),
+        "Rust".truecolor(234, 179, 8),
+        format!("{version} — requires rustc ≥ 1.88.0").truecolor(113, 113, 122),
     );
 
     let should_update = Confirm::new()
@@ -1076,7 +1076,7 @@ pub fn run() -> Result<()> {
     crate::tui::banner::print_inline_separator();
     println!(
         "  {}",
-        format!("Doctor v{}", env!("GIT_VERSION")).truecolor(255, 191, 0)
+        format!("Doctor v{}", env!("GIT_VERSION")).truecolor(161, 161, 170)
     );
     println!();
 
@@ -1108,25 +1108,25 @@ pub fn run() -> Result<()> {
             Status::Ok => {
                 println!(
                     "  {} {}: {}",
-                    "✓".truecolor(80, 220, 100).bold(),
-                    c.name.truecolor(220, 220, 230),
-                    c.detail.truecolor(100, 100, 120)
+                    "✓".truecolor(34, 197, 94).bold(),
+                    c.name.truecolor(228, 228, 231),
+                    c.detail.truecolor(113, 113, 122)
                 );
             }
             Status::Warning => {
                 println!(
                     "  {} {}: {}",
-                    "!".truecolor(255, 220, 60).bold(),
-                    c.name.truecolor(255, 220, 60),
-                    c.detail.truecolor(180, 180, 190)
+                    "!".truecolor(234, 179, 8).bold(),
+                    c.name.truecolor(234, 179, 8),
+                    c.detail.truecolor(113, 113, 122)
                 );
             }
             Status::Missing => {
                 println!(
                     "  {} {}: {}",
-                    "✗".truecolor(240, 70, 70).bold(),
-                    c.name.truecolor(240, 70, 70),
-                    c.detail.truecolor(240, 70, 70)
+                    "✗".truecolor(239, 68, 68).bold(),
+                    c.name.truecolor(239, 68, 68),
+                    c.detail.truecolor(239, 68, 68)
                 );
                 issues += 1;
             }
@@ -1139,7 +1139,7 @@ pub fn run() -> Result<()> {
         println!(
             "  {}",
             "🦀 All checks passed. You're ready to build!"
-                .truecolor(80, 220, 100)
+                .truecolor(34, 197, 94)
                 .bold()
         );
     } else {
@@ -1150,7 +1150,7 @@ pub fn run() -> Result<()> {
                 issues,
                 if issues == 1 { "" } else { "s" }
             )
-            .truecolor(240, 70, 70)
+            .truecolor(239, 68, 68)
             .bold()
         );
     }

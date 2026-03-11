@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use colored::Colorize;
-use dialoguer::{Input, MultiSelect, Select};
+use dialoguer::Input;
 use walkdir::WalkDir;
 
 /// Reopen stdin from /dev/tty when piped (e.g. `curl | sh`).
@@ -30,6 +30,7 @@ use crate::overlay;
 use crate::tokens::{self, TokenMap};
 use crate::tui::banner;
 use crate::tui::generation::{Step, StepStatus, WorkerMsg};
+use crate::tui::wizard;
 use crate::license;
 
 pub struct Config {
@@ -50,37 +51,6 @@ pub struct Config {
     pub license_key: Option<String>,
     pub extras: Vec<String>,
 }
-
-const AUTH_OPTIONS: &[&str] = &["github", "google", "none"];
-const UI_OPTIONS: &[&str] = &["shadcn", "daisyui", "tesign", "minimal"];
-const PM_OPTIONS: &[&str] = &["bun", "pnpm", "yarn", "npm"];
-
-struct ExtraOption {
-    name: &'static str,
-    label: &'static str,
-}
-
-const EXTRAS_OPTIONS: &[ExtraOption] = &[
-    ExtraOption { name: "notifications", label: "Notifications — system notifications" },
-    ExtraOption { name: "clipboard", label: "Clipboard — system clipboard read/write" },
-    ExtraOption { name: "global-shortcut", label: "Global Shortcuts — system-wide keyboard shortcuts" },
-    ExtraOption { name: "autostart", label: "Autostart — launch app at system startup" },
-    ExtraOption { name: "log", label: "Logging — structured logging with colors" },
-    ExtraOption { name: "sql", label: "SQLite — embedded database" },
-    ExtraOption { name: "fs", label: "Filesystem — read/write file access" },
-    ExtraOption { name: "shell", label: "Shell — execute system commands" },
-    ExtraOption { name: "http", label: "HTTP Client — make HTTP requests" },
-    ExtraOption { name: "deep-link", label: "Deep Links — custom URL protocol handler" },
-    ExtraOption { name: "window-state", label: "Window State — persist window size/position" },
-    ExtraOption { name: "cmdk", label: "Command Palette — Ctrl/Cmd+K search" },
-    ExtraOption { name: "i18n", label: "i18n — internationalization" },
-    ExtraOption { name: "tanstack-query", label: "TanStack Query — data fetching & caching" },
-    ExtraOption { name: "framer-motion", label: "Motion — animations & transitions" },
-    ExtraOption { name: "react-hook-form", label: "React Hook Form + Zod — form management" },
-    ExtraOption { name: "tanstack-router", label: "TanStack Router — type-safe routing" },
-    ExtraOption { name: "date-fns", label: "date-fns — date utility library" },
-    ExtraOption { name: "sentry", label: "Sentry — error tracking & crash reporting" },
-];
 
 pub fn run(mut config: Config) -> Result<()> {
     ensure_stdin_tty();
@@ -103,11 +73,75 @@ pub fn run(mut config: Config) -> Result<()> {
     crate::doctor::ensure_msvc()?;
     crate::doctor::ensure_webview2()?;
 
-    let pm = collect_pm(&config)?;
-    let pm_resolved = crate::doctor::ensure_package_manager(Some(&pm))?;
+    let non_interactive = config.yes
+        || (config.app_name.is_some()
+            && config.auth.is_some()
+            && config.ui.is_some()
+            && config.pm.is_some());
+
+    let (pm_resolved, auth_module, ui_module, extras, token_map, oauth_client_id);
+
+    if non_interactive {
+        let pm = config.pm.as_deref().unwrap_or("bun").to_string();
+        pm_resolved = crate::doctor::ensure_package_manager(Some(&pm))?;
+        auth_module = config.auth.clone().unwrap_or_else(|| "github".into());
+        ui_module = config.ui.clone().unwrap_or_else(|| "shadcn".into());
+        extras = config.extras.clone();
+        oauth_client_id = None;
+        token_map = build_token_map(
+            &config,
+            config.app_name.as_deref().unwrap_or("My App"),
+            config.slug.as_deref(),
+            config.bundle_id.as_deref(),
+            config.app_version.as_deref().unwrap_or("0.1.0"),
+            config.author.as_deref().unwrap_or(""),
+            config.description.as_deref().unwrap_or(""),
+            &auth_module,
+            &ui_module,
+            &pm_resolved,
+        );
+    } else {
+        let result = wizard::run_wizard(
+            config.pm.as_deref(),
+            config.auth.as_deref(),
+            config.ui.as_deref(),
+            &config.extras,
+            config.app_name.as_deref(),
+            config.slug.as_deref(),
+            config.bundle_id.as_deref(),
+            config.app_version.as_deref(),
+            config.author.as_deref(),
+            config.description.as_deref(),
+        )?;
+
+        let wiz = match result {
+            Some(w) => w,
+            None => {
+                println!("  Cancelled.");
+                return Ok(());
+            }
+        };
+
+        pm_resolved = crate::doctor::ensure_package_manager(Some(&wiz.pm))?;
+        auth_module = wiz.auth;
+        ui_module = wiz.ui;
+        extras = wiz.extras;
+        oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
+        token_map = build_token_map(
+            &config,
+            &wiz.app_name,
+            Some(wiz.slug.as_str()).filter(|s| !s.is_empty()),
+            Some(wiz.bundle_id.as_str()).filter(|s| !s.is_empty()),
+            &wiz.version,
+            &wiz.author,
+            &wiz.description,
+            &auth_module,
+            &ui_module,
+            &pm_resolved,
+        );
+    }
 
     let mut template = resolve_template(config.template.clone(), config.license_key.as_deref())?;
-    let (auth_module, ui_module) = collect_modules(&config)?;
 
     let auth_dir_check = template.join("auth").join(&auth_module);
     let ui_dir_check = template.join("ui").join(&ui_module);
@@ -117,9 +151,6 @@ pub fn run(mut config: Config) -> Result<()> {
         }
     }
 
-    let oauth_client_id = collect_oauth_client_id(&config, &auth_module)?;
-    let extras = collect_extras(&config)?;
-    let token_map = collect_tokens(&config, &auth_module, &ui_module, &pm_resolved)?;
     let slug = token_map["APP_SLUG"].clone();
 
     let output = config.output.unwrap_or_else(|| PathBuf::from(&slug));
@@ -137,11 +168,11 @@ pub fn run(mut config: Config) -> Result<()> {
 
     println!(
         "\n  {} auth={}, ui={}, pm={}, extras={}",
-        "Modules:".truecolor(255, 191, 0),
-        auth_module.truecolor(80, 200, 255).bold(),
-        ui_module.truecolor(80, 200, 255).bold(),
-        pm_resolved.truecolor(80, 200, 255).bold(),
-        extras.len().to_string().truecolor(80, 200, 255).bold()
+        "Modules:".truecolor(161, 161, 170),
+        auth_module.truecolor(6, 182, 212).bold(),
+        ui_module.truecolor(6, 182, 212).bold(),
+        pm_resolved.truecolor(6, 182, 212).bold(),
+        extras.len().to_string().truecolor(6, 182, 212).bold()
     );
     println!();
 
@@ -278,53 +309,53 @@ pub fn run(mut config: Config) -> Result<()> {
     banner::print_inline_separator();
     println!(
         " {} ./{slug}",
-        "🦀 Project ready at".truecolor(80, 220, 100).bold()
+        "Project ready at".truecolor(34, 197, 94).bold()
     );
     println!();
-    println!(" {}", "Next steps:".truecolor(255, 191, 0).bold());
-    println!("   {}", format!("cd {slug}").truecolor(220, 220, 230));
+    println!(" {}", "Next steps:".truecolor(228, 228, 231).bold());
+    println!("   {}", format!("cd {slug}").truecolor(161, 161, 170));
     if needs_oauth {
         match auth_module.as_str() {
             "github" => {
                 println!(
                     "   {}",
-                    "# Set up GitHub OAuth:".truecolor(255, 220, 60)
+                    "# Set up GitHub OAuth:".truecolor(161, 161, 170)
                 );
                 println!(
                     "   {}",
                     "#   1. Go to https://github.com/settings/developers"
-                        .truecolor(180, 180, 190)
+                        .truecolor(113, 113, 122)
                 );
                 println!(
                     "   {}",
                     "#   2. Create an OAuth App (callback URL can be blank)"
-                        .truecolor(180, 180, 190)
+                        .truecolor(113, 113, 122)
                 );
                 println!(
                     "   {}",
                     "#   3. Copy Client ID into .env as GITHUB_CLIENT_ID"
-                        .truecolor(180, 180, 190)
+                        .truecolor(113, 113, 122)
                 );
             }
             "google" => {
                 println!(
                     "   {}",
-                    "# Set up Google OAuth:".truecolor(255, 220, 60)
+                    "# Set up Google OAuth:".truecolor(161, 161, 170)
                 );
                 println!(
                     "   {}",
                     "#   1. Go to https://console.cloud.google.com/apis/credentials"
-                        .truecolor(180, 180, 190)
+                        .truecolor(113, 113, 122)
                 );
                 println!(
                     "   {}",
                     "#   2. Create a Desktop app credential"
-                        .truecolor(180, 180, 190)
+                        .truecolor(113, 113, 122)
                 );
                 println!(
                     "   {}",
                     "#   3. Copy Client ID into .env as GOOGLE_CLIENT_ID"
-                        .truecolor(180, 180, 190)
+                        .truecolor(113, 113, 122)
                 );
             }
             _ => {}
@@ -333,100 +364,18 @@ pub fn run(mut config: Config) -> Result<()> {
     if !install_ok.load(Ordering::Relaxed) {
         println!(
             "   {}",
-            format!("{pm_resolved} install").truecolor(80, 200, 255).bold()
+            format!("{pm_resolved} install").truecolor(6, 182, 212).bold()
         );
     }
     let dev_cmd = crate::doctor::pm_tauri_dev(&pm_resolved);
     println!(
         "   {}",
-        dev_cmd.truecolor(80, 200, 255).bold()
+        dev_cmd.truecolor(6, 182, 212).bold()
     );
     banner::print_inline_separator();
     println!();
 
     Ok(())
-}
-
-fn collect_modules(config: &Config) -> Result<(String, String)> {
-    let non_interactive = config.yes;
-
-    let auth = match config.auth.clone() {
-        Some(a) if AUTH_OPTIONS.contains(&a.as_str()) => a,
-        Some(a) => anyhow::bail!("Invalid auth module '{a}'. Options: {}", AUTH_OPTIONS.join(", ")),
-        None if non_interactive => "github".into(),
-        None => {
-            let options: Vec<&str> = AUTH_OPTIONS.to_vec();
-            let idx = Select::new()
-                .with_prompt("Auth provider")
-                .items(&options)
-                .default(0)
-                .interact()
-                .context("Prompt cancelled")?;
-            options[idx].to_string()
-        }
-    };
-
-    let ui = match config.ui.clone() {
-        Some(u) if UI_OPTIONS.contains(&u.as_str()) => u,
-        Some(u) => anyhow::bail!("Invalid UI framework '{u}'. Options: {}", UI_OPTIONS.join(", ")),
-        None if non_interactive => "shadcn".into(),
-        None => {
-            let options: Vec<&str> = UI_OPTIONS.to_vec();
-            let idx = Select::new()
-                .with_prompt("UI framework")
-                .items(&options)
-                .default(0)
-                .interact()
-                .context("Prompt cancelled")?;
-            options[idx].to_string()
-        }
-    };
-
-    Ok((auth, ui))
-}
-
-fn collect_extras(config: &Config) -> Result<Vec<String>> {
-    if !config.extras.is_empty() {
-        return Ok(config.extras.clone());
-    }
-    if config.yes {
-        return Ok(vec![]);
-    }
-
-    let labels: Vec<&str> = EXTRAS_OPTIONS.iter().map(|e| e.label).collect();
-
-    println!();
-    let selected = MultiSelect::new()
-        .with_prompt("Extras (Space to toggle, Enter to confirm)")
-        .items(&labels)
-        .interact()
-        .context("Prompt cancelled")?;
-
-    Ok(selected
-        .into_iter()
-        .map(|i| EXTRAS_OPTIONS[i].name.to_string())
-        .collect())
-}
-
-fn collect_pm(config: &Config) -> Result<String> {
-    match config.pm.clone() {
-        Some(p) if PM_OPTIONS.contains(&p.as_str()) => Ok(p),
-        Some(p) => anyhow::bail!(
-            "Invalid package manager '{p}'. Options: {}",
-            PM_OPTIONS.join(", ")
-        ),
-        None if config.yes => Ok("bun".into()),
-        None => {
-            let options: Vec<&str> = PM_OPTIONS.to_vec();
-            let idx = Select::new()
-                .with_prompt("Package manager")
-                .items(&options)
-                .default(0)
-                .interact()
-                .context("Prompt cancelled")?;
-            Ok(options[idx].to_string())
-        }
-    }
 }
 
 fn collect_oauth_client_id(config: &Config, auth_module: &str) -> Result<Option<String>> {
@@ -470,85 +419,38 @@ fn collect_oauth_client_id(config: &Config, auth_module: &str) -> Result<Option<
     }
 }
 
-fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str, pm: &str) -> Result<TokenMap> {
-    let non_interactive = config.yes
-        || (config.app_name.is_some()
-            && config.slug.is_some()
-            && config.bundle_id.is_some());
-
-    let app_name = match config.app_name.clone() {
-        Some(n) => n,
-        None if non_interactive => "My App".into(),
-        None => Input::<String>::new()
-            .with_prompt("App name")
-            .interact_text()
-            .context("Prompt cancelled")?,
-    };
-
-    let default_slug = tokens::to_slug(&app_name);
-    let app_slug = match config.slug.clone() {
-        Some(s) => s,
-        None if non_interactive => default_slug.clone(),
-        None => Input::<String>::new()
-            .with_prompt("App slug (kebab-case)")
-            .default(default_slug.clone())
-            .interact_text()
-            .context("Prompt cancelled")?,
-    };
-
-    let default_bundle = tokens::to_bundle_id(&app_slug);
-    let bundle_id = match config.bundle_id.clone() {
-        Some(b) => b,
-        None if non_interactive => default_bundle.clone(),
-        None => Input::<String>::new()
-            .with_prompt("Bundle identifier")
-            .default(default_bundle.clone())
-            .interact_text()
-            .context("Prompt cancelled")?,
-    };
-
-    let version = match config.app_version.as_deref() {
-        Some(v) if !v.is_empty() => v.to_owned(),
-        _ if non_interactive => "0.1.0".into(),
-        _ => Input::<String>::new()
-            .with_prompt("Version")
-            .default("0.1.0".into())
-            .interact_text()
-            .context("Prompt cancelled")?,
-    };
-
-    let author = match config.author.as_deref() {
-        Some(a) => a.to_owned(),
-        None if non_interactive => String::new(),
-        None => Input::<String>::new()
-            .with_prompt("Author name")
-            .default(String::new())
-            .show_default(false)
-            .interact_text()
-            .context("Prompt cancelled")?,
-    };
-
-    let description = match config.description.as_deref() {
-        Some(d) => d.to_owned(),
-        None if non_interactive => String::new(),
-        None => Input::<String>::new()
-            .with_prompt("Description (optional)")
-            .default(String::new())
-            .show_default(false)
-            .interact_text()
-            .context("Prompt cancelled")?,
-    };
-
+fn build_token_map(
+    _config: &Config,
+    app_name: &str,
+    slug: Option<&str>,
+    bundle_id: Option<&str>,
+    version: &str,
+    author: &str,
+    description: &str,
+    auth_module: &str,
+    ui_module: &str,
+    pm: &str,
+) -> TokenMap {
+    let app_name = if app_name.is_empty() { "My App" } else { app_name };
+    let app_slug = slug
+        .filter(|s| !s.is_empty())
+        .map(String::from)
+        .unwrap_or_else(|| tokens::to_slug(app_name));
+    let bundle = bundle_id
+        .filter(|s| !s.is_empty())
+        .map(String::from)
+        .unwrap_or_else(|| tokens::to_bundle_id(&app_slug));
+    let version = if version.is_empty() { "0.1.0" } else { version };
     let snake = tokens::to_snake(&app_slug);
 
     let mut map = HashMap::new();
-    map.insert("APP_NAME".into(), app_name);
+    map.insert("APP_NAME".into(), app_name.to_string());
     map.insert("APP_SLUG".into(), app_slug);
     map.insert("APP_SLUG_SNAKE".into(), snake);
-    map.insert("APP_BUNDLE_ID".into(), bundle_id);
-    map.insert("APP_VERSION".into(), version);
-    map.insert("APP_DESCRIPTION".into(), description);
-    map.insert("APP_AUTHOR".into(), author);
+    map.insert("APP_BUNDLE_ID".into(), bundle);
+    map.insert("APP_VERSION".into(), version.to_string());
+    map.insert("APP_DESCRIPTION".into(), description.to_string());
+    map.insert("APP_AUTHOR".into(), author.to_string());
     map.insert("AUTH_MODULE".into(), auth_module.into());
     map.insert("UI_MODULE".into(), ui_module.into());
     map.insert("PACKAGE_MANAGER".into(), pm.into());
@@ -557,7 +459,7 @@ fn collect_tokens(config: &Config, auth_module: &str, ui_module: &str, pm: &str)
     map.insert("TAURIKIT_VERSION".into(), env!("GIT_VERSION").into());
     map.insert("GENERATED_AT".into(), unix_timestamp());
 
-    Ok(map)
+    map
 }
 
 /// Copy an overlay directory to output, overwriting existing files.
