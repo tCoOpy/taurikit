@@ -1524,7 +1524,7 @@ dependencies = [
 
 [[package]]
 name = "taurikit"
-version = "1.5.1"
+version = "1.5.2"
 dependencies = [
  "anyhow",
  "clap",
