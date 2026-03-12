@@ -162,3 +162,114 @@ impl TextInputState {
         frame.render_widget(Paragraph::new(lines), area);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_input(n: usize) -> TextInputState {
+        let fields = (0..n)
+            .map(|i| TextField::new(&format!("Field {i}"), &format!("placeholder {i}")))
+            .collect();
+        TextInputState::new(fields)
+    }
+
+    #[test]
+    fn initial_state() {
+        let ti = make_input(3);
+        assert_eq!(ti.active, 0);
+        assert_eq!(ti.value(0), "");
+    }
+
+    #[test]
+    fn insert_char() {
+        let mut ti = make_input(2);
+        ti.insert_char('h');
+        ti.insert_char('i');
+        assert_eq!(ti.value(0), "hi");
+    }
+
+    #[test]
+    fn delete_char() {
+        let mut ti = make_input(1);
+        ti.insert_char('a');
+        ti.insert_char('b');
+        ti.delete_char();
+        assert_eq!(ti.value(0), "a");
+    }
+
+    #[test]
+    fn delete_at_start_does_nothing() {
+        let mut ti = make_input(1);
+        ti.delete_char();
+        assert_eq!(ti.value(0), "");
+    }
+
+    #[test]
+    fn move_left_right() {
+        let mut ti = make_input(1);
+        ti.insert_char('a');
+        ti.insert_char('b');
+        ti.insert_char('c');
+        assert_eq!(ti.fields[0].cursor, 3);
+        ti.move_left();
+        assert_eq!(ti.fields[0].cursor, 2);
+        ti.move_right();
+        assert_eq!(ti.fields[0].cursor, 3);
+    }
+
+    #[test]
+    fn move_left_clamps() {
+        let mut ti = make_input(1);
+        ti.move_left();
+        assert_eq!(ti.fields[0].cursor, 0);
+    }
+
+    #[test]
+    fn move_right_clamps() {
+        let mut ti = make_input(1);
+        ti.insert_char('x');
+        ti.move_right();
+        assert_eq!(ti.fields[0].cursor, 1); // stays at end
+    }
+
+    #[test]
+    fn next_prev_field() {
+        let mut ti = make_input(3);
+        ti.next_field();
+        assert_eq!(ti.active, 1);
+        ti.next_field();
+        assert_eq!(ti.active, 2);
+        ti.next_field(); // clamp
+        assert_eq!(ti.active, 2);
+        ti.prev_field();
+        assert_eq!(ti.active, 1);
+        ti.prev_field();
+        assert_eq!(ti.active, 0);
+        ti.prev_field(); // clamp
+        assert_eq!(ti.active, 0);
+    }
+
+    #[test]
+    fn insert_in_middle() {
+        let mut ti = make_input(1);
+        ti.insert_char('a');
+        ti.insert_char('c');
+        ti.move_left();
+        ti.insert_char('b');
+        assert_eq!(ti.value(0), "abc");
+    }
+
+    #[test]
+    fn with_value() {
+        let field = TextField::new("Test", "ph").with_value("hello");
+        assert_eq!(field.value, "hello");
+        assert_eq!(field.cursor, 5);
+    }
+
+    #[test]
+    fn with_derived() {
+        let field = TextField::new("Test", "ph").with_derived(true);
+        assert!(field.derived);
+    }
+}

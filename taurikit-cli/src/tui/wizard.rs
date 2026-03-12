@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers, MouseButton, MouseEventKind};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
@@ -65,6 +65,7 @@ struct WizardState {
     extras_select: MultiSelectState,
     metadata: TextInputState,
     tick: usize,
+    content_area: Rect,
 }
 
 pub fn run_wizard(
@@ -180,6 +181,7 @@ pub fn run_wizard(
         extras_select,
         metadata,
         tick: 0,
+        content_area: Rect::default(),
     };
 
     let mut terminal =
@@ -194,32 +196,38 @@ pub fn run_wizard(
             .map_err(|e| anyhow::anyhow!("Render error: {e}"))?;
 
         if event::poll(tick_rate).unwrap_or(false) {
-            if let Ok(Event::Key(key)) = event::read() {
-                if key.kind != KeyEventKind::Press {
-                    state.tick += 1;
-                    continue;
-                }
+            match event::read() {
+                Ok(Event::Key(key)) => {
+                    if key.kind == KeyEventKind::Release {
+                        state.tick += 1;
+                        continue;
+                    }
 
-                if key.code == KeyCode::Char('c')
-                    && key.modifiers.contains(KeyModifiers::CONTROL)
-                {
-                    super::leave_tui()
-                        .map_err(|e| anyhow::anyhow!("Failed to leave TUI: {e}"))?;
-                    return Ok(None);
-                }
-
-                match handle_input(&mut state, key.code) {
-                    InputResult::Continue => {}
-                    InputResult::Quit => {
+                    if key.code == KeyCode::Char('c')
+                        && key.modifiers.contains(KeyModifiers::CONTROL)
+                    {
                         super::leave_tui()
                             .map_err(|e| anyhow::anyhow!("Failed to leave TUI: {e}"))?;
                         return Ok(None);
                     }
-                    InputResult::Confirm => {
-                        confirmed = true;
-                        break;
+
+                    match handle_input(&mut state, key.code) {
+                        InputResult::Continue => {}
+                        InputResult::Quit => {
+                            super::leave_tui()
+                                .map_err(|e| anyhow::anyhow!("Failed to leave TUI: {e}"))?;
+                            return Ok(None);
+                        }
+                        InputResult::Confirm => {
+                            confirmed = true;
+                            break;
+                        }
                     }
                 }
+                Ok(Event::Mouse(mouse)) => {
+                    handle_mouse(&mut state, mouse.kind, mouse.column, mouse.row);
+                }
+                _ => {}
             }
         }
 
@@ -294,17 +302,39 @@ fn handle_input(state: &mut WizardState, key: KeyCode) -> InputResult {
                 _ => {}
             },
         },
-        Screen::Extras => match key {
-            KeyCode::Up | KeyCode::Char('k') => state.extras_select.up(),
-            KeyCode::Down | KeyCode::Char('j') => state.extras_select.down(),
-            KeyCode::Char(' ') => state.extras_select.toggle(),
-            KeyCode::Enter => state.screen = Screen::Metadata,
-            KeyCode::Esc => {
-                state.module_phase = ModulePhase::Ui;
-                state.screen = Screen::Modules;
+        Screen::Extras => {
+            if state.extras_select.filtering {
+                match key {
+                    KeyCode::Esc => state.extras_select.clear_filter(),
+                    KeyCode::Backspace => {
+                        if state.extras_select.filter.is_empty() {
+                            state.extras_select.clear_filter();
+                        } else {
+                            state.extras_select.filter_backspace();
+                        }
+                    }
+                    KeyCode::Up | KeyCode::Char('k') => state.extras_select.up(),
+                    KeyCode::Down | KeyCode::Char('j') => state.extras_select.down(),
+                    KeyCode::Char(' ') => state.extras_select.toggle(),
+                    KeyCode::Enter => state.extras_select.clear_filter(),
+                    KeyCode::Char(c) => state.extras_select.filter_char(c),
+                    _ => {}
+                }
+            } else {
+                match key {
+                    KeyCode::Up | KeyCode::Char('k') => state.extras_select.up(),
+                    KeyCode::Down | KeyCode::Char('j') => state.extras_select.down(),
+                    KeyCode::Char(' ') => state.extras_select.toggle(),
+                    KeyCode::Char('/') => state.extras_select.start_filter(),
+                    KeyCode::Enter => state.screen = Screen::Metadata,
+                    KeyCode::Esc => {
+                        state.module_phase = ModulePhase::Ui;
+                        state.screen = Screen::Modules;
+                    }
+                    _ => {}
+                }
             }
-            _ => {}
-        },
+        }
         Screen::Metadata => match key {
             KeyCode::Tab => {
                 update_derived_fields(state);
@@ -335,6 +365,55 @@ fn handle_input(state: &mut WizardState, key: KeyCode) -> InputResult {
         },
     }
     InputResult::Continue
+}
+
+fn handle_mouse(state: &mut WizardState, kind: MouseEventKind, _col: u16, row: u16) {
+    match kind {
+        MouseEventKind::ScrollUp => match state.screen {
+            Screen::PackageManager => state.pm_select.up(),
+            Screen::Modules => match state.module_phase {
+                ModulePhase::Auth => state.auth_select.up(),
+                ModulePhase::Ui => state.ui_select.up(),
+            },
+            Screen::Extras => state.extras_select.up(),
+            _ => {}
+        },
+        MouseEventKind::ScrollDown => match state.screen {
+            Screen::PackageManager => state.pm_select.down(),
+            Screen::Modules => match state.module_phase {
+                ModulePhase::Auth => state.auth_select.down(),
+                ModulePhase::Ui => state.ui_select.down(),
+            },
+            Screen::Extras => state.extras_select.down(),
+            _ => {}
+        },
+        MouseEventKind::Down(MouseButton::Left) => {
+            let area = state.content_area;
+            if row < area.y || row >= area.y + area.height {
+                return;
+            }
+            let relative_row = (row - area.y) as usize;
+
+            match state.screen {
+                Screen::PackageManager => state.pm_select.set_cursor(relative_row),
+                Screen::Modules => match state.module_phase {
+                    ModulePhase::Auth => state.auth_select.set_cursor(relative_row),
+                    ModulePhase::Ui => state.ui_select.set_cursor(relative_row),
+                },
+                Screen::Extras => {
+                    // Account for counter line + blank line before the list
+                    let list_offset = 2;
+                    if relative_row >= list_offset {
+                        let idx = relative_row - list_offset + state.extras_select.scroll_offset;
+                        state.extras_select.set_cursor(idx);
+                        state.extras_select.toggle();
+                    }
+                }
+                _ => {}
+            }
+        }
+        _ => {}
+    }
 }
 
 fn update_derived_fields(state: &mut WizardState) {
@@ -443,6 +522,8 @@ fn render_content(state: &mut WizardState, frame: &mut ratatui::Frame, area: Rec
     let inner = content.inner(area);
     frame.render_widget(content, area);
 
+    state.content_area = inner;
+
     match state.screen {
         Screen::PackageManager => state.pm_select.render(frame, inner),
         Screen::Modules => match state.module_phase {
@@ -547,7 +628,7 @@ fn render_footer(state: &WizardState, frame: &mut ratatui::Frame, area: Rect) {
     let hints = match state.screen {
         Screen::PackageManager => "↑↓ select  Enter next  Esc quit",
         Screen::Modules => "↑↓ select  Enter next  Esc back",
-        Screen::Extras => "↑↓ move  Space toggle  Enter next  Esc back",
+        Screen::Extras => "↑↓ move  Space toggle  / filter  Enter next  Esc back",
         Screen::Metadata => "Tab next field  Enter next  Esc back",
         Screen::Summary => "Enter generate  Esc back  q quit",
     };

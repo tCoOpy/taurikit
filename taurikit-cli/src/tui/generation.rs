@@ -76,8 +76,8 @@ where
                     view.complete_step(i);
                     last_step_time = Instant::now();
                 }
-                WorkerMsg::StepFailed(i, _err) => {
-                    view.fail_step(i);
+                WorkerMsg::StepFailed(i, err) => {
+                    view.fail_step(i, Some(err));
                     last_step_time = Instant::now();
                 }
                 WorkerMsg::AllDone => {
@@ -119,6 +119,7 @@ struct GenerationView {
     steps: Vec<Step>,
     tick: usize,
     celebrating: bool,
+    last_error: Option<String>,
 }
 
 impl GenerationView {
@@ -128,6 +129,7 @@ impl GenerationView {
             steps,
             tick: 0,
             celebrating: false,
+            last_error: None,
         }
     }
 
@@ -154,9 +156,12 @@ impl GenerationView {
         }
     }
 
-    fn fail_step(&mut self, idx: usize) {
+    fn fail_step(&mut self, idx: usize, err: Option<String>) {
         if let Some(s) = self.steps.get_mut(idx) {
             s.status = StepStatus::Failed;
+        }
+        if err.is_some() {
+            self.last_error = err;
         }
     }
 
@@ -280,36 +285,67 @@ impl GenerationView {
     }
 
     fn render_steps(&self, frame: &mut ratatui::Frame, area: Rect) {
-        let lines: Vec<Line> = self
-            .steps
-            .iter()
-            .map(|step| {
-                let (icon, style) = match step.status {
-                    StepStatus::Pending => ("  ○", theme::pending()),
-                    StepStatus::Running => {
-                        let dots = match (self.tick / 4) % 4 {
-                            0 => "   ",
-                            1 => ".  ",
-                            2 => ".. ",
-                            _ => "...",
-                        };
-                        return Line::from(vec![
-                            Span::styled("  ▸ ", theme::running()),
-                            Span::styled(&step.label, theme::running()),
-                            Span::styled(dots, theme::running()),
-                        ]);
-                    }
-                    StepStatus::Done => ("  ✓", theme::success()),
-                    StepStatus::Skipped => ("  ⊘", theme::pending()),
-                    StepStatus::Failed => ("  ✗", theme::error()),
-                };
-                Line::from(vec![
-                    Span::styled(icon, style),
-                    Span::raw(" "),
-                    Span::styled(&step.label, style),
-                ])
-            })
-            .collect();
+        let mut lines: Vec<Line> = Vec::new();
+
+        for step in &self.steps {
+            let line = match step.status {
+                StepStatus::Pending => {
+                    let style = theme::pending();
+                    Line::from(vec![
+                        Span::styled("  ○", style),
+                        Span::raw(" "),
+                        Span::styled(&step.label, style),
+                    ])
+                }
+                StepStatus::Running => {
+                    let dots = match (self.tick / 4) % 4 {
+                        0 => "   ",
+                        1 => ".  ",
+                        2 => ".. ",
+                        _ => "...",
+                    };
+                    Line::from(vec![
+                        Span::styled("  ▸ ", theme::running()),
+                        Span::styled(&step.label, theme::running()),
+                        Span::styled(dots, theme::running()),
+                    ])
+                }
+                StepStatus::Done => {
+                    let style = theme::success();
+                    Line::from(vec![
+                        Span::styled("  ✓", style),
+                        Span::raw(" "),
+                        Span::styled(&step.label, style),
+                    ])
+                }
+                StepStatus::Skipped => {
+                    let style = theme::pending();
+                    Line::from(vec![
+                        Span::styled("  ⊘", style),
+                        Span::raw(" "),
+                        Span::styled(&step.label, style),
+                    ])
+                }
+                StepStatus::Failed => {
+                    let style = theme::error();
+                    Line::from(vec![
+                        Span::styled("  ✗", style),
+                        Span::raw(" "),
+                        Span::styled(&step.label, style),
+                    ])
+                }
+            };
+            lines.push(line);
+        }
+
+        if let Some(err) = &self.last_error {
+            lines.push(Line::raw(""));
+            let truncated: String = err.chars().take(60).collect();
+            lines.push(Line::from(Span::styled(
+                format!("    {truncated}"),
+                theme::error(),
+            )));
+        }
 
         frame.render_widget(
             Paragraph::new(lines)

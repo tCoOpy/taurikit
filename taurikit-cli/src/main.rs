@@ -16,7 +16,7 @@ mod upgrade;
 
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 
 /// TauriKit — generate a production-ready Rust Tauri desktop app from a template.
 #[derive(Parser)]
@@ -207,6 +207,13 @@ enum Commands {
         /// Filter plugins by name or keyword
         filter: Option<String>,
     },
+
+    /// Generate shell completion scripts
+    Completions {
+        /// Shell to generate completions for (bash, zsh, fish, powershell, elvish)
+        #[arg(value_enum)]
+        shell: clap_complete::Shell,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -321,6 +328,10 @@ fn main() -> anyhow::Result<()> {
         }
         Commands::Plugins { filter } => {
             plugins::run(filter.as_deref());
+        }
+        Commands::Completions { shell } => {
+            let mut cmd = Cli::command();
+            clap_complete::generate(shell, &mut cmd, "taurikit", &mut std::io::stdout());
         }
     }
 

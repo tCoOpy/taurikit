@@ -9,6 +9,29 @@ use colored::Colorize;
 use dialoguer::Input;
 use walkdir::WalkDir;
 
+struct CleanupGuard {
+    path: PathBuf,
+    disarmed: bool,
+}
+
+impl CleanupGuard {
+    fn new(path: PathBuf) -> Self {
+        Self { path, disarmed: false }
+    }
+
+    fn disarm(&mut self) {
+        self.disarmed = true;
+    }
+}
+
+impl Drop for CleanupGuard {
+    fn drop(&mut self) {
+        if !self.disarmed && self.path.exists() {
+            let _ = fs::remove_dir_all(&self.path);
+        }
+    }
+}
+
 /// Reopen stdin from /dev/tty when piped (e.g. `curl | sh`).
 /// Without this, `inquire` cannot enter raw mode on a pipe fd.
 #[cfg(unix)]
@@ -161,6 +184,8 @@ pub fn run(mut config: Config) -> Result<()> {
         );
     }
 
+    let mut cleanup_guard = CleanupGuard::new(output.clone());
+
     let base_dir = template.join("base");
     if !base_dir.is_dir() {
         anyhow::bail!("Template missing 'base/' directory at {}", base_dir.display());
@@ -297,11 +322,10 @@ pub fn run(mut config: Config) -> Result<()> {
         Ok(())
         })();
 
-        if result.is_err() {
-            let _ = std::fs::remove_dir_all(&output_c);
-        }
         result
     })?;
+
+    cleanup_guard.disarm();
 
     let needs_oauth = matches!(auth_module.as_str(), "github" | "google") && oauth_client_id.is_none();
 

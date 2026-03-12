@@ -32,6 +32,12 @@ impl SelectState {
         }
     }
 
+    pub fn set_cursor(&mut self, idx: usize) {
+        if idx < self.items.len() {
+            self.cursor = idx;
+        }
+    }
+
     pub fn selected_label(&self) -> &str {
         &self.items[self.cursor].label
     }
@@ -63,5 +69,81 @@ impl SelectState {
             .collect();
 
         frame.render_widget(Paragraph::new(lines), area);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_select(n: usize) -> SelectState {
+        let items = (0..n)
+            .map(|i| SelectItem {
+                label: format!("item-{i}"),
+                description: format!("desc-{i}"),
+            })
+            .collect();
+        SelectState::new(items)
+    }
+
+    #[test]
+    fn initial_cursor_is_zero() {
+        let s = make_select(3);
+        assert_eq!(s.cursor, 0);
+        assert_eq!(s.selected_label(), "item-0");
+    }
+
+    #[test]
+    fn down_moves_cursor() {
+        let mut s = make_select(3);
+        s.down();
+        assert_eq!(s.cursor, 1);
+        assert_eq!(s.selected_label(), "item-1");
+    }
+
+    #[test]
+    fn down_clamps_at_end() {
+        let mut s = make_select(3);
+        s.down();
+        s.down();
+        s.down(); // should not go past 2
+        assert_eq!(s.cursor, 2);
+    }
+
+    #[test]
+    fn up_clamps_at_zero() {
+        let mut s = make_select(3);
+        s.up(); // already at 0
+        assert_eq!(s.cursor, 0);
+    }
+
+    #[test]
+    fn up_moves_cursor() {
+        let mut s = make_select(3);
+        s.down();
+        s.down();
+        s.up();
+        assert_eq!(s.cursor, 1);
+    }
+
+    #[test]
+    fn set_cursor_in_bounds() {
+        let mut s = make_select(4);
+        s.set_cursor(2);
+        assert_eq!(s.cursor, 2);
+        assert_eq!(s.selected_label(), "item-2");
+    }
+
+    #[test]
+    fn set_cursor_out_of_bounds_ignored() {
+        let mut s = make_select(3);
+        s.set_cursor(10);
+        assert_eq!(s.cursor, 0); // unchanged
+    }
+
+    #[test]
+    fn item_count() {
+        let s = make_select(5);
+        assert_eq!(s.items.len(), 5);
     }
 }
