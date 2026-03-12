@@ -38,7 +38,7 @@ impl Drop for CleanupGuard {
 fn ensure_stdin_tty() {
     use std::io::IsTerminal;
     if !std::io::stdin().is_terminal() {
-        if let Ok(tty) = fs::File::open("/dev/tty") {
+        if let Ok(tty) = fs::OpenOptions::new().read(true).write(true).open("/dev/tty") {
             use std::os::unix::io::AsRawFd;
             unsafe { libc::dup2(tty.as_raw_fd(), libc::STDIN_FILENO); }
         }
