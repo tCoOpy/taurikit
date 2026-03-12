@@ -1,14 +1,12 @@
 use ratatui::style::{Color, Modifier, Style};
 
 pub const ACCENT: Color = Color::Rgb(6, 182, 212);
-pub const ACCENT_DIM: Color = Color::Rgb(14, 116, 144);
 pub const GREEN: Color = Color::Rgb(34, 197, 94);
 pub const RED: Color = Color::Rgb(239, 68, 68);
 pub const DIM: Color = Color::Rgb(113, 113, 122);
 pub const TEXT: Color = Color::Rgb(228, 228, 231);
 pub const MUTED: Color = Color::Rgb(161, 161, 170);
 pub const BG: Color = Color::Rgb(9, 9, 11);
-pub const SURFACE: Color = Color::Rgb(24, 24, 27);
 pub const BORDER_COLOR: Color = Color::Rgb(39, 39, 42);
 
 pub fn title() -> Style {
@@ -45,10 +43,6 @@ pub fn progress_filled() -> Style {
 
 pub fn text() -> Style {
     Style::default().fg(TEXT)
-}
-
-pub fn muted() -> Style {
-    Style::default().fg(MUTED)
 }
 
 pub fn border() -> Style {
