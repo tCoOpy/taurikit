@@ -32,16 +32,28 @@ impl Drop for CleanupGuard {
     }
 }
 
-/// Reopen stdin from /dev/tty when piped (e.g. `curl | sh`).
-/// Without this, `inquire` cannot enter raw mode on a pipe fd.
+/// Reopen stdin from the terminal when piped (e.g. `curl | sh`).
+/// On macOS, kqueue only delivers events on the inherited pty slave fd, not on a freshly
+/// opened /dev/tty fd — so we prefer duping stdout/stderr before falling back to /dev/tty.
 #[cfg(unix)]
 fn ensure_stdin_tty() {
     use std::io::IsTerminal;
-    if !std::io::stdin().is_terminal() {
-        if let Ok(tty) = fs::OpenOptions::new().read(true).write(true).open("/dev/tty") {
-            use std::os::unix::io::AsRawFd;
-            unsafe { libc::dup2(tty.as_raw_fd(), libc::STDIN_FILENO); }
-        }
+    if std::io::stdin().is_terminal() {
+        return;
+    }
+    // Prefer the inherited pty slave fd so that macOS kqueue works.
+    if std::io::stdout().is_terminal() {
+        unsafe { libc::dup2(libc::STDOUT_FILENO, libc::STDIN_FILENO); }
+        return;
+    }
+    if std::io::stderr().is_terminal() {
+        unsafe { libc::dup2(libc::STDERR_FILENO, libc::STDIN_FILENO); }
+        return;
+    }
+    // Last resort: open /dev/tty directly (works on Linux, unreliable on macOS).
+    if let Ok(tty) = fs::OpenOptions::new().read(true).write(true).open("/dev/tty") {
+        use std::os::unix::io::AsRawFd;
+        unsafe { libc::dup2(tty.as_raw_fd(), libc::STDIN_FILENO); }
     }
 }
 

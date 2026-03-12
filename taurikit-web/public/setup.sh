@@ -26,7 +26,7 @@ main() {
     ensure_bun
 
     printf "\nStarting project wizard...\n\n"
-    exec "${INSTALL_DIR}/${BIN_NAME}" new "$@" <>/dev/tty
+    exec "${INSTALL_DIR}/${BIN_NAME}" new "$@" 0<&1
 }
 
 get_installed_version() {
