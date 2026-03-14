@@ -25,7 +25,7 @@ export default function Nav() {
     >
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="text-xl font-bold tracking-tight">
-          <span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent pr-px">
             Crab
           </span>
           <span className="text-white">Yard</span>
