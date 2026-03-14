@@ -1,0 +1,98 @@
+﻿#!/bin/sh
+set -eu
+
+API_BASE="https://crabyard-api-production.up.railway.app"
+BIN_NAME="crabyard"
+INSTALL_DIR="${CRABYARD_INSTALL_DIR:-$HOME/.crabyard/bin}"
+
+main() {
+    need_cmd curl
+    need_cmd tar
+    need_cmd uname
+
+    local os arch target
+    os="$(detect_os)"
+    arch="$(detect_arch)"
+    target="${arch}-${os}"
+
+    local version
+    version="${CRABYARD_VERSION:-$(fetch_latest_version)}"
+
+    printf "Installing crabyard %s (%s)...\n" "$version" "$target"
+
+    local url="${API_BASE}/cli/download/${target}?version=${version}"
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+
+    printf "  Downloading %s\n" "$url"
+    curl -fsSL "$url" -o "${tmpdir}/crabyard.tar.gz"
+    tar xzf "${tmpdir}/crabyard.tar.gz" -C "$tmpdir"
+
+    mkdir -p "$INSTALL_DIR"
+    mv "${tmpdir}/${BIN_NAME}" "${INSTALL_DIR}/${BIN_NAME}"
+    chmod +x "${INSTALL_DIR}/${BIN_NAME}"
+
+    printf "  Installed to %s/%s\n" "$INSTALL_DIR" "$BIN_NAME"
+
+    if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
+        printf "\n  Add crabyard to your PATH:\n"
+        printf "    export PATH=\"%s:\$PATH\"\n\n" "$INSTALL_DIR"
+        add_to_shell_profile "$INSTALL_DIR"
+    fi
+
+    printf "Done. Run 'crabyard --help' to get started.\n"
+}
+
+detect_os() {
+    case "$(uname -s)" in
+        Linux*)  echo "unknown-linux-gnu" ;;
+        Darwin*) echo "apple-darwin" ;;
+        MINGW*|MSYS*|CYGWIN*) echo "pc-windows-msvc" ;;
+        *) err "Unsupported OS: $(uname -s)" ;;
+    esac
+}
+
+detect_arch() {
+    case "$(uname -m)" in
+        x86_64|amd64)   echo "x86_64" ;;
+        aarch64|arm64)  echo "aarch64" ;;
+        *) err "Unsupported architecture: $(uname -m)" ;;
+    esac
+}
+
+fetch_latest_version() {
+    curl -fsSL "${API_BASE}/cli/latest" | sed -n 's/.*"version": *"\([^"]*\)".*/\1/p'
+}
+
+add_to_shell_profile() {
+    local dir="$1"
+    local line="export PATH=\"${dir}:\$PATH\""
+    local profile=""
+
+    if [ -n "${ZSH_VERSION:-}" ] || [ -f "$HOME/.zshrc" ]; then
+        profile="$HOME/.zshrc"
+    elif [ -f "$HOME/.bashrc" ]; then
+        profile="$HOME/.bashrc"
+    elif [ -f "$HOME/.profile" ]; then
+        profile="$HOME/.profile"
+    fi
+
+    if [ -n "$profile" ] && ! grep -qF "$dir" "$profile" 2>/dev/null; then
+        printf "\n# Crabyard\n%s\n" "$line" >> "$profile"
+        printf "  Added to %s (restart your shell or run: source %s)\n" "$profile" "$profile"
+    fi
+}
+
+need_cmd() {
+    if ! command -v "$1" > /dev/null 2>&1; then
+        err "Required command '$1' not found"
+    fi
+}
+
+err() {
+    printf "error: %s\n" "$1" >&2
+    exit 1
+}
+
+main "$@"

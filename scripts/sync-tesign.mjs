@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+﻿#!/usr/bin/env node
 
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -35,7 +35,7 @@ function parseArgs() {
 
 function printHelp() {
   console.log(`
-  sync-tesign — Detect changes in the tesign library that affect the taurikit overlay
+  sync-tesign — Detect changes in the tesign library that affect the crabyard overlay
 
   Usage:
     node scripts/sync-tesign.mjs --tesign <path-to-tesign-repo>
@@ -134,7 +134,7 @@ function run() {
   const unchanged = results.filter((r) => r.status === "unchanged");
 
   console.log();
-  console.log("  tesign → taurikit overlay sync check");
+  console.log("  tesign → crabyard overlay sync check");
   console.log("  ─────────────────────────────────────");
   console.log();
 

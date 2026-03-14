@@ -1,4 +1,4 @@
-name: Test Generated App
+﻿name: Test Generated App
 
 on:
   workflow_dispatch:
@@ -18,14 +18,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            asset: taurikit-x86_64-unknown-linux-gnu.tar.gz
-            binary: taurikit
+            asset: crabyard-x86_64-unknown-linux-gnu.tar.gz
+            binary: crabyard
           - os: macos-latest
-            asset: taurikit-aarch64-apple-darwin.tar.gz
-            binary: taurikit
+            asset: crabyard-aarch64-apple-darwin.tar.gz
+            binary: crabyard
           - os: windows-latest
-            asset: taurikit-x86_64-pc-windows-msvc.zip
-            binary: taurikit.exe
+            asset: crabyard-x86_64-pc-windows-msvc.zip
+            binary: crabyard.exe
 
     runs-on: ${{ matrix.os }}
 

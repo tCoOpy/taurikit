@@ -1,24 +1,24 @@
-# TauriKit Monorepo — AI Coding Instructions
+﻿# Crabyard Monorepo — AI Coding Instructions
 
-TauriKit is a CLI tool and template system that generates production-ready Tauri v2 desktop apps with modular auth and UI framework choices.
+Crabyard is a CLI tool and template system that generates production-ready Tauri v2 desktop apps with modular auth and UI framework choices.
 
 ---
 
 ## Monorepo Structure
 
 ```
-taurikit/
-├── taurikit-cli/       # Rust CLI binary (clap + dialoguer + ratatui)
+crabyard/
+├── crabyard-cli/       # Rust CLI binary (clap + dialoguer + ratatui)
 ├── scaffold/           # Template system (base + auth overlays + UI overlays)
-├── taurikit-api/       # Backend API (Hono on Railway — license validation, Stripe)
-├── taurikit-web/       # Landing page (Astro + Tailwind)
-├── taurikit-docs/      # Documentation site (Astro Starlight)
+├── crabyard-api/       # Backend API (Hono on Railway — license validation, Stripe)
+├── crabyard-web/       # Landing page (Astro + Tailwind)
+├── crabyard-docs/      # Documentation site (Astro Starlight)
 └── scripts/            # Maintainer scripts (sync-tesign.mjs)
 ```
 
 ---
 
-## TauriKit CLI (`taurikit-cli/`)
+## Crabyard CLI (`crabyard-cli/`)
 
 Rust binary built with `clap` for argument parsing, `dialoguer` for interactive prompts, and `ratatui` for TUI progress display.
 
@@ -26,14 +26,14 @@ Rust binary built with `clap` for argument parsing, `dialoguer` for interactive 
 
 | Command | Purpose | Entry |
 |---------|---------|-------|
-| `taurikit new [APP_NAME]` | Generate a new project (interactive wizard) | `src/generate.rs` |
-| `taurikit doctor` | Check system prerequisites + auto-install | `src/doctor.rs` |
-| `taurikit update-ui` | Switch or update UI framework in existing project | `src/update_ui.rs` |
+| `crabyard new [APP_NAME]` | Generate a new project (interactive wizard) | `src/generate.rs` |
+| `crabyard doctor` | Check system prerequisites + auto-install | `src/doctor.rs` |
+| `crabyard update-ui` | Switch or update UI framework in existing project | `src/update_ui.rs` |
 
 ### Source Files
 
 ```
-taurikit-cli/src/
+crabyard-cli/src/
 ├── main.rs           # CLI entry, clap derive, command dispatch
 ├── generate.rs       # Project generation (15-step pipeline)
 ├── doctor.rs         # System prerequisite checks + auto-install (~800 lines)
@@ -71,17 +71,17 @@ taurikit-cli/src/
 
 ## Template Generation Pipeline (`generate.rs`)
 
-The `taurikit new` command runs this 15-step pipeline:
+The `crabyard new` command runs this 15-step pipeline:
 
 1. **Prerequisite checks** — Rust ≥1.88, Linux deps, Xcode CLT, MSVC, WebView2
 2. **Package manager detection** — bun > pnpm > yarn > npm (auto-installs bun)
-3. **Template resolution** — `--template` flag → license key download → `~/.taurikit/templates/`
+3. **Template resolution** — `--template` flag → license key download → `~/.crabyard/templates/`
 4. **Module selection** — auth: github/google/none, ui: shadcn/daisyui/tesign
 5. **App metadata collection** — name, slug, bundle ID, author, version, description
 6. **Copy base template** — `scaffold/base/` → output directory
 7. **Apply auth overlay** — `scaffold/auth/{module}/` files copied over base
 8. **Apply UI overlay** — `scaffold/ui/{module}/` files copied over base
-9. **Process markers** — `// TAURIKIT:KEY` lines replaced with code from `module.json`
+9. **Process markers** — `// CRABYARD:KEY` lines replaced with code from `module.json`
 10. **Token replacement** — `{{APP_NAME}}`, `{{APP_SLUG}}`, etc. across all text files
 11. **Merge npm dependencies** — `module.json` `npm_dev_dependencies` → `package.json`
 12. **Write .env** — copy `.env.example` → `.env`, inject OAuth client ID if provided
@@ -98,8 +98,8 @@ The `taurikit new` command runs this 15-step pipeline:
 ```
 scaffold/
 ├── base/               # Core template (foundation for ALL projects)
-│   ├── src/             # React frontend with TAURIKIT markers
-│   ├── src-tauri/       # Rust backend with TAURIKIT markers
+│   ├── src/             # React frontend with CRABYARD markers
+│   ├── src-tauri/       # Rust backend with CRABYARD markers
 │   └── package.json     # Dependencies ({{TOKEN}} placeholders)
 │
 ├── auth/                # Auth strategy overlays
@@ -147,7 +147,7 @@ Tokens are `{{KEY}}` placeholders in template files that get replaced with user-
 | `{{PACKAGE_MANAGER}}` | bun | Detected/selected PM |
 | `{{PM_RUN}}` | bun | PM run prefix |
 | `{{PM_TAURI_DEV}}` | bun run tauri dev | PM dev command |
-| `{{TAURIKIT_VERSION}}` | 1.5.3 | Build-time version |
+| `{{CRABYARD_VERSION}}` | 1.5.3 | Build-time version |
 | `{{GENERATED_AT}}` | 1741500000 | Unix timestamp |
 
 **Important:** `{{TOKEN}}` must NOT appear in `.tsx`/`.jsx` files — curly braces conflict with JSX syntax. Use `VITE_APP_NAME` env var for app name in React components.
@@ -160,19 +160,19 @@ Markers are placeholder lines in base template files that get replaced with code
 
 ```rust
 // In base/src-tauri/src/lib.rs:
-// TAURIKIT:MOD_AUTH      ← replaced with "mod auth;" or removed
-// TAURIKIT:COMMANDS      ← replaced with command registrations
+// CRABYARD:MOD_AUTH      ← replaced with "mod auth;" or removed
+// CRABYARD:COMMANDS      ← replaced with command registrations
 
 // In base/src/lib/types.ts:
-// TAURIKIT:AUTH_TYPES    ← replaced with TypeScript interfaces
+// CRABYARD:AUTH_TYPES    ← replaced with TypeScript interfaces
 ```
 
 Each auth module's `module.json` defines marker values:
 ```json
 {
   "markers": {
-    "TAURIKIT:MOD_AUTH": "mod auth;",
-    "TAURIKIT:COMMANDS": "commands::auth::login,\n..."
+    "CRABYARD:MOD_AUTH": "mod auth;",
+    "CRABYARD:COMMANDS": "commands::auth::login,\n..."
   },
   "npm_dev_dependencies": {
     "lucide-react": "^0.577.0"
@@ -204,23 +204,23 @@ The `merge_package_deps()` function adds dependencies from both auth + UI module
    label = "My Auth Provider"
    overlay = "auth/myauth"
    ```
-6. Add to `AUTH_OPTIONS` in `taurikit-cli/src/generate.rs`
+6. Add to `AUTH_OPTIONS` in `crabyard-cli/src/generate.rs`
 
 ### Marker keys to implement (must match base template marker comments):
 
 | Marker | Purpose |
 |--------|---------|
-| `TAURIKIT:MOD_AUTH` | `mod auth;` declaration in `lib.rs` |
-| `TAURIKIT:COMMANDS` | Command registrations in `generate_handler![]` |
-| `TAURIKIT:MOD_AUTH_CMD` | `pub mod auth;` in `commands/mod.rs` |
-| `TAURIKIT:MOD_AUTH_MODEL` | `pub mod auth;` in `models/mod.rs` |
-| `TAURIKIT:AUTH_ERRORS` | Error variants for `AppError` enum |
-| `TAURIKIT:AUTH_STATE` | Fields for `AppState` struct |
-| `TAURIKIT:AUTH_STATE_DEFAULTS` | Default values for `AppState` fields |
-| `TAURIKIT:AUTH_TYPES` | TypeScript interfaces in `types.ts` |
-| `TAURIKIT:AUTH_IMPORTS` | TypeScript imports in `tauri.ts` |
-| `TAURIKIT:AUTH_COMMANDS` | TypeScript invoke wrappers in `tauri.ts` |
-| `TAURIKIT:STORE_AUTH_*` | Zustand store state/setters/defaults |
+| `CRABYARD:MOD_AUTH` | `mod auth;` declaration in `lib.rs` |
+| `CRABYARD:COMMANDS` | Command registrations in `generate_handler![]` |
+| `CRABYARD:MOD_AUTH_CMD` | `pub mod auth;` in `commands/mod.rs` |
+| `CRABYARD:MOD_AUTH_MODEL` | `pub mod auth;` in `models/mod.rs` |
+| `CRABYARD:AUTH_ERRORS` | Error variants for `AppError` enum |
+| `CRABYARD:AUTH_STATE` | Fields for `AppState` struct |
+| `CRABYARD:AUTH_STATE_DEFAULTS` | Default values for `AppState` fields |
+| `CRABYARD:AUTH_TYPES` | TypeScript interfaces in `types.ts` |
+| `CRABYARD:AUTH_IMPORTS` | TypeScript imports in `tauri.ts` |
+| `CRABYARD:AUTH_COMMANDS` | TypeScript invoke wrappers in `tauri.ts` |
+| `CRABYARD:STORE_AUTH_*` | Zustand store state/setters/defaults |
 
 ---
 
@@ -236,13 +236,13 @@ The `merge_package_deps()` function adds dependencies from both auth + UI module
    label = "My UI Framework"
    overlay = "ui/myui"
    ```
-6. Add to `UI_OPTIONS` in `taurikit-cli/src/generate.rs`
+6. Add to `UI_OPTIONS` in `crabyard-cli/src/generate.rs`
 
 ---
 
 ## How to Add a New CLI Flag
 
-In `taurikit-cli/src/main.rs`, add to the `Commands::New` enum:
+In `crabyard-cli/src/main.rs`, add to the `Commands::New` enum:
 
 ```rust
 #[arg(long, value_name = "VALUE")]
@@ -255,7 +255,7 @@ Then pass it through `Config` in the match arm and handle it in `generate.rs`.
 
 ## How to Add a New Doctor Check
 
-In `taurikit-cli/src/doctor.rs`:
+In `crabyard-cli/src/doctor.rs`:
 
 1. Add a new `ensure_*()` function following the existing pattern
 2. Call it from `generate.rs` in the prerequisite section
@@ -296,7 +296,7 @@ When the CLI is invoked via `curl | sh`, stdin is a pipe, not a TTY. The `ensure
 
 ## tesign Sync System
 
-The `scripts/sync-tesign.mjs` script synchronizes components between the standalone `tesign` library (`@slideup/design`) and the taurikit overlay at `scaffold/ui/tesign/`.
+The `scripts/sync-tesign.mjs` script synchronizes components between the standalone `tesign` library (`@slideup/design`) and the crabyard overlay at `scaffold/ui/tesign/`.
 
 ### Sync State
 
@@ -347,17 +347,17 @@ npx @slideup/design init                    # initialize config
 
 ### License Validation (`license.rs`)
 
-1. POST license key to `https://taurikit-api-production.up.railway.app/license/validate`
+1. POST license key to `https://crabyard-api-production.up.railway.app/license/validate`
 2. If valid: download template tarball from returned `download_url`
-3. Extract to `~/.cache/taurikit/templates/{version}/`
+3. Extract to `~/.cache/crabyard/templates/{version}/`
 4. Cache is reused on subsequent runs
 
 ### Template Resolution Order
 
 1. `--template` flag (local path)
-2. `TAURIKIT_TEMPLATE` env var
-3. `--license-key` / `TAURIKIT_LICENSE_KEY` → API download
-4. `~/.taurikit/templates/` fallback
+2. `CRABYARD_TEMPLATE` env var
+3. `--license-key` / `CRABYARD_LICENSE_KEY` → API download
+4. `~/.crabyard/templates/` fallback
 
 ---
 
@@ -397,7 +397,7 @@ git push origin v1.2.6
 
 ---
 
-## API (`taurikit-api/`)
+## API (`crabyard-api/`)
 
 Hono web framework on Railway. Endpoints:
 
@@ -415,7 +415,7 @@ Hono web framework on Railway. Endpoints:
 
 - **Rust**: Edition 2024, minimum Rust 1.88. `anyhow` for CLI errors. `thiserror` in scaffold.
 - **Token placeholders**: Double curly braces `{{KEY}}`. Never invent new token names without adding them to `tokens.rs`.
-- **Markers**: Lines containing `// TAURIKIT:NAME` or `# TAURIKIT:NAME`. Defined in module.json, applied by `overlay.rs`.
+- **Markers**: Lines containing `// CRABYARD:NAME` or `# CRABYARD:NAME`. Defined in module.json, applied by `overlay.rs`.
 - **Binary detection**: `is_binary_path()` in `tokens.rs` — `.png`, `.ico`, `.lock`, etc. are copied without token replacement.
 - **Skip paths**: `node_modules`, `target`, `.git`, `dist`, `.cache`, `.claude` — never copied to output.
 - **Module config**: Each overlay has a `module.json` at its root. Contains `markers` and `npm_dev_dependencies`.

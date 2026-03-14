@@ -1,4 +1,4 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 
 # Rust build artifacts
@@ -26,7 +26,7 @@ Thumbs.db
 # Next.js
 next-env.d.ts
 
-# External repos (not part of TauriKit)
+# External repos (not part of Crabyard)
 github-repo-syncer/
 
 # Wrangler

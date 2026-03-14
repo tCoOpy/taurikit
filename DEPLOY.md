@@ -1,6 +1,6 @@
-# TauriKit — Deploy Guide
+﻿# Crabyard — Deploy Guide
 
-Step-by-step to get TauriKit live.
+Step-by-step to get Crabyard live.
 
 ## Prerequisites
 
@@ -8,14 +8,14 @@ Step-by-step to get TauriKit live.
 - Cloudflare account (Pages — for static sites)
 - Stripe account (test or live)
 - Resend account (for email delivery)
-- Domain: `taurikit.dev`
+- Domain: `crabyard.dev`
 
-## 1. Deploy the API (`taurikit-api`)
+## 1. Deploy the API (`crabyard-api`)
 
 ### Create Railway project
 
-1. Go to https://railway.com/new → **Deploy from GitHub repo** → select `tCoOpy/taurikit`
-2. Set **Root Directory** to `taurikit-api`
+1. Go to https://railway.com/new → **Deploy from GitHub repo** → select `tCoOpy/crabyard`
+2. Set **Root Directory** to `crabyard-api`
 3. Add a **PostgreSQL** database service (click **+ New** → **Database** → **PostgreSQL**)
 4. Railway auto-injects `DATABASE_URL` when Postgres is linked
 
@@ -52,30 +52,30 @@ export ADMIN_KEY=<your-admin-key>
 
 ### Custom domain
 
-Railway → API service → **Settings** → **Networking** → **Custom Domain** → add `api.taurikit.dev`
+Railway → API service → **Settings** → **Networking** → **Custom Domain** → add `api.crabyard.dev`
 
 ### Set up Stripe webhook
 
 In Stripe Dashboard → Webhooks → Add endpoint:
-- URL: `https://api.taurikit.dev/stripe/webhook`
+- URL: `https://api.crabyard.dev/stripe/webhook`
 - Events: `checkout.session.completed`
 - Copy the signing secret → update `STRIPE_WEBHOOK_SECRET` in Railway variables
 
-## 2. Deploy the landing page (`taurikit-web`)
+## 2. Deploy the landing page (`crabyard-web`)
 
 ### Create Pages project
 
 ```sh
-cd taurikit-web
+cd crabyard-web
 bun run build
 
 # First deploy creates the project
-wrangler pages deploy dist --project-name=taurikit-web
+wrangler pages deploy dist --project-name=crabyard-web
 ```
 
 ### Configure custom domain
 
-In the Cloudflare dashboard: Workers & Pages → taurikit-web → Custom domains → add `taurikit.dev`.
+In the Cloudflare dashboard: Workers & Pages → crabyard-web → Custom domains → add `crabyard.dev`.
 
 ### CI/CD
 
@@ -83,12 +83,12 @@ Push to `main` triggers `.github/workflows/deploy.yml`. Set these GitHub repo se
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
-## 3. Release the CLI (`taurikit-cli`)
+## 3. Release the CLI (`crabyard-cli`)
 
 ### Push and tag
 
 ```sh
-cd taurikit-cli
+cd crabyard-cli
 git add -A && git commit -m "v0.2.0"
 git tag v0.2.0
 git push origin main --tags
@@ -100,34 +100,34 @@ The release workflow builds binaries for all platforms and creates a GitHub Rele
 
 ```sh
 # macOS/Linux — installs CLI + launches interactive wizard
-curl -fsSL https://taurikit.dev/setup.sh | sh
+curl -fsSL https://crabyard.dev/setup.sh | sh
 
 # Windows (PowerShell)
-irm https://taurikit.dev/setup.ps1 | iex
+irm https://crabyard.dev/setup.ps1 | iex
 ```
 
-The scripts download the CLI from GitHub Releases (release must exist first), then immediately launch `taurikit new`.
+The scripts download the CLI from GitHub Releases (release must exist first), then immediately launch `crabyard new`.
 
-CLI-only install scripts are also available at `taurikit.dev/install.sh` and `taurikit.dev/install.ps1`.
+CLI-only install scripts are also available at `crabyard.dev/install.sh` and `crabyard.dev/install.ps1`.
 
-All scripts live in `taurikit-web/public/` and are served automatically by the landing page.
+All scripts live in `crabyard-web/public/` and are served automatically by the landing page.
 
 ## 4. End-to-end verification
 
 ```sh
 # 1. Run setup wizard (installs CLI + launches project generator)
-curl -fsSL https://taurikit.dev/setup.sh | sh
+curl -fsSL https://crabyard.dev/setup.sh | sh
 
 # Or install CLI only, then run separately:
-# curl -fsSL https://taurikit.dev/install.sh | sh
-# taurikit doctor
+# curl -fsSL https://crabyard.dev/install.sh | sh
+# crabyard doctor
 
 # 2. Insert a test license directly via Railway shell or CLI:
 # railway run bun -e "import pg from 'postgres'; const s=pg(process.env.DATABASE_URL); await s\`INSERT INTO licenses (id,email,key,plan) VALUES ('test','test@example.com','TK-TEST00000000-00000000-00000000-00000000-00000000','standard')\`; await s.end()"
 
 # 3. Generate a project
-export TAURIKIT_LICENSE_KEY=TK-TEST00000000-00000000-00000000-00000000-00000000
-taurikit new "Test App" --auth github --ui shadcn --yes
+export CRABYARD_LICENSE_KEY=TK-TEST00000000-00000000-00000000-00000000-00000000
+crabyard new "Test App" --auth github --ui shadcn --yes
 
 # 4. Run it
 cd test-app
@@ -139,8 +139,8 @@ bun run tauri dev
 
 | Record | Type | Target |
 |--------|------|--------|
-| `taurikit.dev` | CNAME | Cloudflare Pages |
-| `api.taurikit.dev` | CNAME | Railway |
+| `crabyard.dev` | CNAME | Cloudflare Pages |
+| `api.crabyard.dev` | CNAME | Railway |
 
 ## GitHub repo secrets
 

@@ -1,4 +1,4 @@
-name: Package Template
+﻿name: Package Template
 
 on:
   push:
@@ -17,7 +17,7 @@ jobs:
 
       - name: Package scaffold
         run: |
-          tar czf "taurikit-${{ steps.version.outputs.version }}.tar.gz" \
+          tar czf "crabyard-${{ steps.version.outputs.version }}.tar.gz" \
             -C scaffold \
             --exclude='.git' \
             --exclude='node_modules' \
@@ -32,5 +32,5 @@ jobs:
             -X POST \
             -H "X-Admin-Key: ${{ secrets.ADMIN_KEY }}" \
             -H "Content-Type: application/gzip" \
-            --data-binary "@taurikit-${{ steps.version.outputs.version }}.tar.gz" \
+            --data-binary "@crabyard-${{ steps.version.outputs.version }}.tar.gz" \
             "${{ secrets.API_URL }}/template/upload?version=${{ steps.version.outputs.version }}"
