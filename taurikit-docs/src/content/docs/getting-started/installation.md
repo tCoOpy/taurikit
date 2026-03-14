@@ -7,7 +7,7 @@ description: Install TauriKit and its prerequisites.
 
 TauriKit generates Tauri v2 apps, so you need the Tauri development toolchain installed:
 
-- **Rust** 1.80+ — [rustup.rs](https://rustup.rs/)
+- **Rust** 1.88+ — [rustup.rs](https://rustup.rs/)
 - **Bun** 1.1+ — [bun.sh](https://bun.sh/)
 - **Git** — [git-scm.com](https://git-scm.com/)
 

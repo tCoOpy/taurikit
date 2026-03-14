@@ -34,6 +34,8 @@ taurikit new [APP_NAME] [OPTIONS]
 | `--yes` / `-y` | Accept all defaults without prompting | `false` |
 | `--no-git` | Skip `git init` and initial commit | `false` |
 | `--no-install` | Skip dependency installation (`bun install`) | `false` |
+| `--pm <PM>` | Package manager: `bun`, `pnpm`, `yarn`, or `npm` | Auto-detected |
+| `--extras <FEATURE,...>` | Comma-separated extras to include (e.g. `notifications,clipboard`) | None |
 
 ### Environment variables
 
@@ -72,7 +74,7 @@ Verifies the following are installed and meet minimum versions:
 
 | Check | Minimum |
 |-------|---------|
-| Rust | 1.80 |
+| Rust | 1.88 |
 | Cargo | (any) |
 | Bun | 1.1 |
 | Git | (any) |
@@ -316,6 +318,38 @@ taurikit init
 
 # Initialize a specific project
 taurikit init -p ../my-tauri-app
+```
+
+---
+
+## `taurikit completions`
+
+Generate shell completion scripts for `taurikit` commands.
+
+```sh
+taurikit completions <SHELL>
+```
+
+### Arguments
+
+| Argument | Description |
+|----------|-------------|
+| `SHELL` | Shell to generate completions for: `bash`, `zsh`, `fish`, `powershell`, or `elvish` |
+
+### Examples
+
+```sh
+# Bash
+taurikit completions bash >> ~/.bashrc
+
+# Zsh
+taurikit completions zsh >> ~/.zshrc
+
+# Fish
+taurikit completions fish > ~/.config/fish/completions/taurikit.fish
+
+# PowerShell
+taurikit completions powershell >> $PROFILE
 ```
 
 ---

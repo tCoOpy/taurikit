@@ -20,10 +20,6 @@ And these shared hooks:
 - `useKeyboardShortcut` — declarative keyboard shortcut binding
 - `useSettings` — app settings with Tauri backend persistence
 - `useTheme` — dark/light theme toggle (CSS class or data-theme)
-description: Choose between shadcn/ui, DaisyUI, or tesign for your app's component library.
----
-
-TauriKit supports three UI frameworks. You choose one during project generation with `--ui <framework>`.
 
 ## shadcn/ui
 

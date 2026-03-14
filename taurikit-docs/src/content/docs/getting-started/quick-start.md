@@ -14,7 +14,7 @@ taurikit new "My Desktop App"
 The CLI will prompt you to choose:
 
 1. **Auth provider** — GitHub, Google, or None
-2. **UI framework** — shadcn/ui or DaisyUI
+2. **UI framework** — shadcn/ui, DaisyUI, tesign, or Minimal
 
 To skip prompts, pass flags directly:
 
