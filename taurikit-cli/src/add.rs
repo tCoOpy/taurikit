@@ -45,7 +45,7 @@ const FEATURES: &[FeatureInfo] = &[
         npm_deps: &[("@tauri-apps/plugin-global-shortcut", "~2")],
         npm_dev_deps: &[],
         cargo_deps: &[("tauri-plugin-global-shortcut", "\"2\"")],
-        tauri_plugins: &["tauri_plugin_global_shortcut"],
+        tauri_plugins: &["tauri_plugin_global_shortcut::Builder::new().build()"],
         capabilities: &["global-shortcut:default"],
     },
     FeatureInfo {
@@ -243,7 +243,7 @@ const FEATURES: &[FeatureInfo] = &[
         npm_deps: &[],
         npm_dev_deps: &[],
         cargo_deps: &[("tauri-plugin-window-state", "\"2\"")],
-        tauri_plugins: &["tauri_plugin_window_state"],
+        tauri_plugins: &["tauri_plugin_window_state::Builder::default().build()"],
         capabilities: &["window-state:default"],
     },
 ];
