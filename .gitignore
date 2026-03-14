@@ -1,14 +1,18 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Rust build artifacts
 target/
+
+# Build outputs
 dist/
-.astro/
+.next/
+out/
 
 # Environment
 .env
 .env.local
+.env.*.local
 .env.production
 
 # OS
@@ -18,6 +22,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Next.js
+next-env.d.ts
 
 # External repos (not part of TauriKit)
 github-repo-syncer/
@@ -29,3 +36,9 @@ github-repo-syncer/
 # Claude
 .claude/
 /scripts/release.ps1
+
+# Bun
+bun.lockb
+
+# Misc
+*.tsbuildinfo

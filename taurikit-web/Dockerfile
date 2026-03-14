@@ -1,13 +1,19 @@
-FROM oven/bun:1 AS build
+FROM oven/bun:1 AS builder
 WORKDIR /app
-COPY package.json bun.lock ./
+COPY package.json bun.lockb* ./
 RUN bun install --frozen-lockfile
 COPY . .
 RUN bun run build
 
-FROM oven/bun:1
+FROM oven/bun:1 AS runner
 WORKDIR /app
-COPY --from=build /app/dist ./dist
-COPY server.ts .
+ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
+
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
 EXPOSE 3000
-CMD ["bun", "server.ts"]
+CMD ["bun", "server.js"]
