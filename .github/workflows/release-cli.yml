@@ -4,12 +4,82 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.2.3 or v1.2.3)"
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
+  prepare:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: v
+        run: |
+          version="${{ inputs.version }}"
+          version="${version#v}"
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "tag=v$version" >> $GITHUB_OUTPUT
+
+      - name: Update version files
+        run: |
+          v="${{ steps.v.outputs.version }}"
+          sed -i "s/^version = \"[^\"]*\"/version = \"$v\"/" scaffold/manifest.toml
+          sed -i "s/^taurikit_version = \"[^\"]*\"/taurikit_version = \"$v\"/" scaffold/manifest.toml
+          sed -i "s/^version = \"[^\"]*\"/version = \"$v\"/" scaffold/base/manifest.toml
+          sed -i "s/^taurikit_version = \"[^\"]*\"/taurikit_version = \"$v\"/" scaffold/base/manifest.toml
+          sed -i "0,/^version = \"[^\"]*\"/{s/^version = \"[^\"]*\"/version = \"$v\"/}" taurikit-cli/Cargo.toml
+          sed -i "s/TAURIKIT_VERSION}} | [0-9.]*/TAURIKIT_VERSION}} | $v/g" .cursorrules 2>/dev/null || true
+          sed -i "s/TAURIKIT_VERSION}} | [0-9.]*/TAURIKIT_VERSION}} | $v/g" .github/copilot-instructions.md 2>/dev/null || true
+          sed -i "s/TAURIKIT_VERSION}} | [0-9.]*/TAURIKIT_VERSION}} | $v/g" taurikit-docs/src/content/docs/guides/overlay-architecture.md 2>/dev/null || true
+
+      - name: Package and upload scaffold
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          API_URL: ${{ vars.API_URL || 'https://taurikit-api-production.up.railway.app' }}
+        run: |
+          v="${{ steps.v.outputs.version }}"
+          cd scaffold
+          tar -czf /tmp/taurikit-${v}.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='target' \
+            --exclude='.claude' \
+            --exclude='MEMORY.md' \
+            base auth ui manifest.toml
+          cd ..
+          curl -fsS -X POST \
+            "${API_URL}/template/upload?version=${v}" \
+            -H "X-Admin-Key: ${ADMIN_KEY}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary @/tmp/taurikit-${v}.tar.gz
+
+      - name: Commit, tag, and push
+        run: |
+          v="${{ steps.v.outputs.version }}"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -m "release v${v}"
+          git tag "v${v}"
+          git push origin main
+          git push origin "v${v}"
+
   build:
+    needs: [prepare]
+    if: always() && (needs.prepare.result == 'success' || needs.prepare.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +109,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.tag || github.ref }}
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -76,7 +148,8 @@ jobs:
           path: taurikit-cli/taurikit-${{ matrix.target }}.*
 
   release:
-    needs: build
+    needs: [prepare, build]
+    if: always() && !failure() && !cancelled()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -87,6 +160,7 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.prepare.outputs.tag || github.ref_name }}
           files: artifacts/*
           generate_release_notes: true
         env:
