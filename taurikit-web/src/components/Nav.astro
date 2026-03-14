@@ -1,0 +1,48 @@
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-lg border-b border-zinc-100">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="text-xl font-bold tracking-tight">
+      <span class="bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 bg-clip-text text-transparent">Tauri</span><span class="text-zinc-900">Kit</span>
+    </a>
+
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500">
+      <a href="#features" class="hover:text-zinc-900 transition">Features</a>
+      <a href="#pricing" class="hover:text-zinc-900 transition">Pricing</a>
+      <a href="https://docs.taurikit.dev" class="hover:text-zinc-900 transition">Docs</a>
+      <a href="/changelog" class="hover:text-zinc-900 transition">Changelog</a>
+      <a
+        href="#pricing"
+        class="px-5 py-2 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-lg font-semibold shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 hover:-translate-y-0.5 transition-all active:scale-[0.98]"
+      >
+        Get TauriKit
+      </a>
+    </div>
+
+    <button id="mobile-menu-btn" class="md:hidden p-2 text-zinc-600 hover:text-zinc-900 transition" aria-label="Open menu">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+  </div>
+
+  <div id="mobile-menu" class="hidden md:hidden border-t border-zinc-100 bg-white px-6 pb-4 pt-2 space-y-3">
+    <a href="#features" class="block text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2">Features</a>
+    <a href="#pricing" class="block text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2">Pricing</a>
+    <a href="https://docs.taurikit.dev" class="block text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2">Docs</a>
+    <a href="/changelog" class="block text-sm font-medium text-zinc-600 hover:text-zinc-900 py-2">Changelog</a>
+    <a
+      href="#pricing"
+      class="block text-center px-5 py-2.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-lg font-semibold mt-2"
+    >
+      Get TauriKit
+    </a>
+  </div>
+</nav>
+
+<script>
+  const btn = document.getElementById("mobile-menu-btn");
+  const menu = document.getElementById("mobile-menu");
+  btn?.addEventListener("click", () => menu?.classList.toggle("hidden"));
+  menu?.querySelectorAll("a").forEach((a) =>
+    a.addEventListener("click", () => menu?.classList.add("hidden"))
+  );
+</script>

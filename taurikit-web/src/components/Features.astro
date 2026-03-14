@@ -1,0 +1,90 @@
+<section id="features" class="py-24 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-20 reveal">
+      <p class="text-brand-600 text-sm font-semibold uppercase tracking-[0.15em] mb-3">Features</p>
+      <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900">
+        Everything you need to ship
+      </h2>
+      <p class="mt-4 text-zinc-500 text-lg max-w-2xl mx-auto font-light">
+        Stop wiring boilerplate. TauriKit gives you a complete foundation so you can focus on what makes your app unique.
+      </p>
+    </div>
+
+    <div class="space-y-28">
+      <!-- Feature 1: Auth -->
+      <div class="reveal flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        <div class="lg:w-1/2 order-2 lg:order-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-600 text-xs font-semibold mb-4">Authentication</div>
+          <h3 class="text-2xl md:text-3xl font-bold text-zinc-900 mb-4">Auth — ready to go</h3>
+          <p class="text-zinc-500 leading-relaxed mb-6">
+            GitHub OAuth (Device Flow), Google OAuth (PKCE loopback), or no auth at all.
+            Token persistence, session restoration, and sign-out — all wired up across Rust and React.
+          </p>
+          <ul class="space-y-2.5">
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Secure token storage via OS keychain</li>
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Automatic session restoration on launch</li>
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Swap providers with one CLI flag</li>
+          </ul>
+        </div>
+        <div class="lg:w-1/2 order-1 lg:order-2">
+          <div class="rounded-2xl border border-zinc-100 bg-zinc-50 p-6 aspect-[4/3] flex items-center justify-center">
+            <div class="text-zinc-300 text-sm flex flex-col items-center gap-2">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              Auth screenshot placeholder
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature 2: UI Frameworks -->
+      <div class="reveal flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        <div class="lg:w-1/2">
+          <div class="rounded-2xl border border-zinc-100 bg-zinc-50 p-6 aspect-[4/3] flex items-center justify-center">
+            <div class="text-zinc-300 text-sm flex flex-col items-center gap-2">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>
+              UI framework screenshot placeholder
+            </div>
+          </div>
+        </div>
+        <div class="lg:w-1/2">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-600 text-xs font-semibold mb-4">Customizable</div>
+          <h3 class="text-2xl md:text-3xl font-bold text-zinc-900 mb-4">Pick your UI framework</h3>
+          <p class="text-zinc-500 leading-relaxed mb-6">
+            shadcn/ui, daisyUI, or tesign — your call. Each comes pre-configured with
+            Tailwind v4, dark mode, responsive layouts, and a polished title bar component.
+          </p>
+          <ul class="space-y-2.5">
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Three UI frameworks to choose from</li>
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Switch UI post-generation with one command</li>
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Custom title bar styled per framework</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Feature 3: Modular Architecture -->
+      <div class="reveal flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        <div class="lg:w-1/2 order-2 lg:order-1">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 text-brand-600 text-xs font-semibold mb-4">Architecture</div>
+          <h3 class="text-2xl md:text-3xl font-bold text-zinc-900 mb-4">Modular overlay system</h3>
+          <p class="text-zinc-500 leading-relaxed mb-6">
+            Base template + auth overlay + UI overlay — cleanly composed. Every combination
+            compiles with zero warnings and zero dead code. Pick exactly what you need.
+          </p>
+          <ul class="space-y-2.5">
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> No if/else feature flags in generated code</li>
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Full source — no lock-in, no obfuscation</li>
+            <li class="flex items-center gap-3 text-sm text-zinc-600"><span class="text-green-500 font-bold">✓</span> Extend with your own overlays</li>
+          </ul>
+        </div>
+        <div class="lg:w-1/2 order-1 lg:order-2">
+          <div class="rounded-2xl border border-zinc-100 bg-zinc-50 p-6 aspect-[4/3] flex items-center justify-center">
+            <div class="text-zinc-300 text-sm flex flex-col items-center gap-2">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+              Architecture diagram placeholder
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

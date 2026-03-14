@@ -1,0 +1,76 @@
+<section id="pricing" class="py-24 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="reveal">
+      <p class="text-brand-600 text-sm font-semibold uppercase tracking-[0.15em] mb-3">Pricing</p>
+      <h2 class="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
+        Simple, one-time pricing
+      </h2>
+      <p class="text-zinc-500 text-lg mb-14 font-light">
+        Pay once, use forever. No subscriptions. Free updates for life.
+      </p>
+    </div>
+
+    <div class="max-w-sm mx-auto reveal">
+      <div class="bg-white border-2 border-brand-500 rounded-2xl p-8 relative shadow-xl shadow-brand-100/50">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
+          <span class="bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white text-xs font-semibold px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg shadow-brand-500/30">
+            Lifetime access
+          </span>
+        </div>
+
+        <div class="mt-4 mb-8">
+          <span class="text-5xl font-extrabold text-zinc-900">$49</span>
+          <span class="text-zinc-400 ml-1 text-lg">one-time</span>
+        </div>
+
+        <ul class="space-y-3.5 text-left mb-8">
+          {[
+            "Full source code",
+            "All auth providers",
+            "All UI frameworks",
+            "CLI generator",
+            "Free updates forever",
+            "Commercial use license",
+          ].map((item) => (
+            <li class="flex items-center gap-3 text-zinc-700">
+              <span class="text-green-500 font-bold">✓</span>
+              {item}
+            </li>
+          ))}
+        </ul>
+
+        <button
+          id="checkout-btn"
+          class="w-full py-4 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-xl font-bold text-lg shadow-xl shadow-brand-500/20 hover:shadow-brand-500/40 hover:-translate-y-0.5 transition-all active:scale-[0.98] cursor-pointer"
+        >
+          Get TauriKit
+        </button>
+        <p class="mt-4 text-xs text-zinc-400">
+          Secure checkout via Stripe · Instant license key delivery
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("checkout-btn")?.addEventListener("click", async () => {
+      const btn = document.getElementById("checkout-btn") as HTMLButtonElement;
+      btn.textContent = "Redirecting...";
+      btn.disabled = true;
+
+      try {
+        const resp = await fetch("https://api.taurikit.dev/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await resp.json();
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } catch {
+        btn.textContent = "Get TauriKit";
+        btn.disabled = false;
+      }
+    });
+  </script>
+</section>
