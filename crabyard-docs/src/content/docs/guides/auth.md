@@ -1,4 +1,4 @@
-﻿---
+---
 title: Auth Providers
 description: Configure GitHub, Google, or no authentication in your Crabyard app.
 ---

@@ -1,4 +1,4 @@
-﻿---
+---
 title: Splash Screen
 description: Show a loading screen while your app initializes.
 ---

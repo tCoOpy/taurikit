@@ -1,4 +1,4 @@
-﻿---
+---
 title: Onboarding Tour
 description: Show a guided welcome tour on first launch.
 ---

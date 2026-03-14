@@ -1,4 +1,4 @@
-﻿---
+---
 title: Project Structure
 description: Anatomy of a generated Crabyard project.
 ---

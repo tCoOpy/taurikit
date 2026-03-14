@@ -1,4 +1,4 @@
-﻿# Crabyard
+# Crabyard
 
 Generate production-ready Tauri v2 desktop apps with one command.
 

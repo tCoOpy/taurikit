@@ -1,4 +1,4 @@
-﻿import { AnimateIn } from "./AnimateIn";
+import { AnimateIn } from "./AnimateIn";
 
 function CodeWindow({ title, code }: { title: string; code: string }) {
   return (

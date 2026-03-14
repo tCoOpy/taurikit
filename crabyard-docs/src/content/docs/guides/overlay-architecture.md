@@ -1,4 +1,4 @@
-﻿---
+---
 title: Overlay Architecture
 description: How Crabyard's modular overlay system composes auth, UI, and other modules on top of the base scaffold.
 ---

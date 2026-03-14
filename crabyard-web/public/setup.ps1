@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 # Usage:
 #   irm https://crabyard.dev/setup.ps1 | iex

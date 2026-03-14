@@ -1,4 +1,4 @@
-﻿name: Test Generated App
+name: Test Generated App
 
 on:
   workflow_dispatch:

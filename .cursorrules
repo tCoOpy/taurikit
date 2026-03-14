@@ -1,4 +1,4 @@
-﻿# Crabyard Monorepo — AI Coding Instructions
+# Crabyard Monorepo — AI Coding Instructions
 
 Crabyard is a CLI tool and template system that generates production-ready Tauri v2 desktop apps with modular auth and UI framework choices.
 

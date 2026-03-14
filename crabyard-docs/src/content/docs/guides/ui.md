@@ -1,4 +1,4 @@
-﻿---
+---
 title: UI Frameworks
 description: Choose between shadcn/ui, DaisyUI, Tesign, or Minimal for your app's component library.
 ---

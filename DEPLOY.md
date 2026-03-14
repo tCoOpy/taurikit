@@ -1,4 +1,4 @@
-﻿# Crabyard — Deploy Guide
+# Crabyard — Deploy Guide
 
 Step-by-step to get Crabyard live.
 

@@ -1,4 +1,4 @@
-﻿---
+---
 title: Quick Start
 description: Generate and run your first Crabyard app.
 ---

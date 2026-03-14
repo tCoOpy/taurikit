@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 $ApiBase = "https://crabyard-api-production.up.railway.app"
 $BinName = "crabyard.exe"

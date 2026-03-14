@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 set -eu
 
 API_BASE="https://crabyard-api-production.up.railway.app"

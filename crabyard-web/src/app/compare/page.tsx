@@ -1,4 +1,4 @@
-﻿import Nav from "@/components/Nav";
+import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import { AnimateIn } from "@/components/AnimateIn";
 import Link from "next/link";

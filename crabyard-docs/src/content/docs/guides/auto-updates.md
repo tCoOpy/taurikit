@@ -1,4 +1,4 @@
-﻿---
+---
 title: Auto-Updates
 description: Built-in auto-update system with download progress and one-click install.
 ---

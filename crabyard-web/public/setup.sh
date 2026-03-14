@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 set -eu
 
 # Usage: curl -fsSL https://crabyard.dev/setup.sh | sh

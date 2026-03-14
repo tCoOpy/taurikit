@@ -1,4 +1,4 @@
-﻿name: Package Template
+name: Package Template
 
 on:
   push:

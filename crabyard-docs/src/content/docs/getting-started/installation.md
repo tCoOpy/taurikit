@@ -1,4 +1,4 @@
-﻿---
+---
 title: Installation
 description: Install Crabyard and its prerequisites.
 ---

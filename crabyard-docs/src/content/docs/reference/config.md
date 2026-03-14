@@ -1,4 +1,4 @@
-﻿---
+---
 title: Configuration
 description: Reference for tauri.conf.json and template tokens.
 ---

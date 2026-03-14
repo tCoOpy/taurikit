@@ -1,4 +1,4 @@
-﻿---
+---
 title: Settings System
 description: Persistent app settings with typed state management.
 ---

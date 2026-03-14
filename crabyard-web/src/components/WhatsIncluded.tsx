@@ -1,4 +1,4 @@
-﻿import { AnimateIn } from "./AnimateIn";
+import { AnimateIn } from "./AnimateIn";
 
 const ITEMS = [
   "Rust backend with Tauri v2",
