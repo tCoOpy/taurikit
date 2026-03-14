@@ -27,21 +27,22 @@ const questions = [
 ];
 ---
 
-<section class="py-24 px-6">
+<section class="py-24 px-6 bg-zinc-50/50">
   <div class="max-w-3xl mx-auto">
     <div class="text-center mb-14 reveal">
-      <h2 class="text-3xl font-bold tracking-tight text-zinc-900">
+      <p class="text-brand-600 text-sm font-semibold uppercase tracking-[0.15em] mb-3">FAQ</p>
+      <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-zinc-900">
         Frequently asked questions
       </h2>
     </div>
-    <div class="space-y-4 reveal">
+    <div class="space-y-3 reveal">
       {questions.map((item) => (
-        <details class="group bg-white border border-zinc-100 rounded-xl hover:border-zinc-200 transition">
-          <summary class="flex items-center justify-between p-6 cursor-pointer text-lg font-medium text-zinc-900">
+        <details class="group bg-white border border-zinc-100 rounded-xl hover:border-zinc-200 hover:shadow-sm transition-all">
+          <summary class="flex items-center justify-between p-6 cursor-pointer text-base font-medium text-zinc-900">
             {item.q}
-            <span class="text-zinc-400 group-open:rotate-45 transition-transform duration-200 text-2xl leading-none ml-4 shrink-0">+</span>
+            <span class="w-6 h-6 rounded-full bg-zinc-100 group-hover:bg-brand-50 flex items-center justify-center text-zinc-400 group-hover:text-brand-500 group-open:rotate-45 transition-all duration-200 ml-4 shrink-0 text-lg leading-none">+</span>
           </summary>
-          <div class="px-6 pb-6 text-zinc-500 leading-relaxed">
+          <div class="px-6 pb-6 text-zinc-500 leading-relaxed text-sm">
             {item.a}
           </div>
         </details>

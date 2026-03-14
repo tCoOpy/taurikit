@@ -42,6 +42,16 @@ const { title, description = "Ship production-ready Rust Tauri desktop apps in m
         { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
       );
       document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+
+      document.querySelectorAll(".spotlight").forEach((card) => {
+        card.addEventListener("mousemove", (e) => {
+          const rect = (card as HTMLElement).getBoundingClientRect();
+          const x = ((e as MouseEvent).clientX - rect.left) / rect.width * 100;
+          const y = ((e as MouseEvent).clientY - rect.top) / rect.height * 100;
+          (card as HTMLElement).style.setProperty("--mouse-x", x + "%");
+          (card as HTMLElement).style.setProperty("--mouse-y", y + "%");
+        });
+      });
     </script>
   </body>
 </html>

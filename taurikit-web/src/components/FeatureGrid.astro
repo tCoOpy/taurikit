@@ -33,19 +33,22 @@ const features = [
 ];
 ---
 
-<section class="py-24 px-6 bg-zinc-50/50">
-  <div class="max-w-6xl mx-auto">
+<section class="relative py-24 px-6 bg-zinc-950 noise overflow-hidden">
+  <div class="absolute top-[-20%] right-[-15%] w-[500px] h-[500px] rounded-full bg-brand-600/10 blur-[120px] pulse-glow"></div>
+  <div class="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-brand-500/8 blur-[100px] float-slow"></div>
+
+  <div class="relative z-10 max-w-6xl mx-auto">
     <div class="text-center mb-14 reveal">
-      <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900">
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-white">
         And much more built in
       </h2>
     </div>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 reveal">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 reveal">
       {features.map((f) => (
-        <div class="bg-white border border-zinc-100 rounded-2xl p-6 hover:border-zinc-200 hover:shadow-lg hover:shadow-zinc-100/80 hover:-translate-y-1 transition-all duration-300">
-          <div class="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 mb-4" set:html={f.icon} />
-          <h3 class="text-lg font-semibold text-zinc-900 mb-2">{f.title}</h3>
-          <p class="text-zinc-500 text-sm leading-relaxed">{f.description}</p>
+        <div class="glow-card spotlight rounded-2xl bg-zinc-900/80 backdrop-blur-sm p-6 hover:-translate-y-1 transition-all duration-300">
+          <div class="w-11 h-11 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-400 mb-4" set:html={f.icon} />
+          <h3 class="text-lg font-semibold text-white mb-2">{f.title}</h3>
+          <p class="text-zinc-400 text-sm leading-relaxed">{f.description}</p>
         </div>
       ))}
     </div>
