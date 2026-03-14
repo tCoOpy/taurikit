@@ -347,7 +347,7 @@ npx @slideup/design init                    # initialize config
 
 ### License Validation (`license.rs`)
 
-1. POST license key to `https://crabyard-api-production.up.railway.app/license/validate`
+1. POST license key to `https://taurikit-api-production.up.railway.app/license/validate`
 2. If valid: download template tarball from returned `download_url`
 3. Extract to `~/.cache/crabyard/templates/{version}/`
 4. Cache is reused on subsequent runs

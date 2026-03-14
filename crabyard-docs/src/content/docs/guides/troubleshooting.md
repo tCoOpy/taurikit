@@ -102,7 +102,7 @@ The cached template may be corrupted or outdated.
 ### `License server unreachable`
 
 - Check your internet connection
-- The API at `crabyard-api-production.up.railway.app` may be temporarily down
+- The API at `taurikit-api-production.up.railway.app` may be temporarily down
 - If you have a cached template, generation will use the cached version automatically
 
 ### WebView2 installation hangs (Windows)

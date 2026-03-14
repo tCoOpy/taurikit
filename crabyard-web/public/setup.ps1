@@ -7,7 +7,7 @@ $ErrorActionPreference = "Stop"
 # Or with license key in environment:
 #   $env:CRABYARD_LICENSE_KEY = "TK-xxxx"; irm https://crabyard.dev/setup.ps1 | iex
 
-$ApiBase = "https://crabyard-api-production.up.railway.app"
+$ApiBase = "https://taurikit-api-production.up.railway.app"
 $BinName = "crabyard.exe"
 $InstallDir = if ($env:CRABYARD_INSTALL_DIR) { $env:CRABYARD_INSTALL_DIR } else { Join-Path $HOME ".crabyard\bin" }
 
