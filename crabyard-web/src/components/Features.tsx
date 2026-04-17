@@ -61,7 +61,7 @@ function Check() {
 
 export default function Features() {
   return (
-    <section id="features" className="py-28 px-6">
+    <section id="features" className="py-28 px-6 border-t border-white/10">
       <div className="max-w-6xl mx-auto">
         <AnimateIn className="text-center mb-20">
           <p className="text-brand-500 text-sm font-semibold uppercase tracking-[0.15em] mb-3">

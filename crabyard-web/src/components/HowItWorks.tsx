@@ -48,7 +48,7 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-24 px-6 border-t border-zinc-800/40">
+    <section className="py-24 px-6 border-t border-white/10">
       <div className="max-w-4xl mx-auto">
         <AnimateIn className="text-center mb-16">
           <p className="text-brand-500 text-sm font-semibold uppercase tracking-[0.15em] mb-3">

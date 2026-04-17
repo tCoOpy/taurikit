@@ -2,15 +2,16 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-black text-zinc-400 pt-16 pb-8 px-6 border-t border-zinc-800/50">
-      <div className="max-w-6xl mx-auto">
+    <footer className="relative overflow-hidden bg-black text-zinc-400 pt-16 pb-8 px-6 border-t border-white/10">
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-brand-500/5 rounded-full blur-[100px] pointer-events-none" aria-hidden />
+      <div className="max-w-6xl mx-auto relative">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="text-xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent">
-                Tauri
+                Crab
               </span>
-              <span className="text-white">Kit</span>
+              <span className="text-white">Yard</span>
             </Link>
             <p className="mt-3 text-sm text-zinc-600 leading-relaxed max-w-xs">
               Ship production-ready Rust Tauri desktop apps in minutes, not
@@ -101,7 +102,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-zinc-900 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-zinc-700">
             &copy; {new Date().getFullYear()} Crabyard. All rights reserved.
           </p>

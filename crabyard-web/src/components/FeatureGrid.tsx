@@ -101,7 +101,7 @@ const FEATURES = [
 
 export default function FeatureGrid() {
   return (
-    <section className="relative py-24 px-6 bg-zinc-950 noise overflow-hidden border-t border-zinc-800/40">
+    <section className="relative py-24 px-6 bg-zinc-950 noise overflow-hidden border-t border-white/10">
       <div
         className="absolute top-[-20%] right-[-15%] w-[500px] h-[500px] rounded-full bg-brand-600/8 blur-[120px] pulse-glow pointer-events-none"
         aria-hidden

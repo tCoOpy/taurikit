@@ -34,63 +34,50 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="py-24 px-6 border-t border-zinc-800/40">
+    <section className="py-24 px-4 bg-black relative">
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent pointer-events-none" aria-hidden />
       <div className="max-w-3xl mx-auto">
-        <AnimateIn className="text-center mb-14">
-          <p className="text-brand-500 text-sm font-semibold uppercase tracking-[0.15em] mb-3">
-            FAQ
-          </p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-100">
-            Frequently asked questions
+        <AnimateIn className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">
+            Frequently Asked Questions
           </h2>
         </AnimateIn>
 
         <AnimateIn delay={0.1}>
-          <div className="space-y-3">
-            {QUESTIONS.map((item, i) => (
-              <div
-                key={i}
-                className="bg-zinc-900/60 border border-zinc-800/50 rounded-xl hover:border-zinc-700/80 transition-colors"
-              >
-                <button
-                  className="flex items-center justify-between w-full p-6 text-left cursor-pointer"
-                  onClick={() => setOpen(open === i ? null : i)}
-                  aria-expanded={open === i}
-                >
-                  <span className="text-base font-medium text-zinc-100 pr-4">
-                    {item.q}
-                  </span>
-                  <span
-                    className={`w-7 h-7 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 transition-all duration-200 ${
-                      open === i
-                        ? "bg-brand-500/15 text-brand-400 rotate-45"
-                        : ""
-                    }`}
-                    aria-hidden
+          <div className="space-y-2">
+            {QUESTIONS.map((item, i) => {
+              const isOpen = open === i;
+              return (
+                <div key={i} className="border-b border-white/10">
+                  <button
+                    className="w-full py-6 flex items-center justify-between text-left focus:outline-none group"
+                    onClick={() => setOpen(isOpen ? null : i)}
+                    aria-expanded={isOpen}
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    <span className="text-lg font-medium text-white/90 group-hover:text-brand-400 transition-colors pr-4">
+                      {item.q}
+                    </span>
+                    <span
+                      className={`ml-4 text-2xl text-white/40 transition-transform duration-300 ${
+                        isOpen ? "rotate-45" : ""
+                      }`}
+                      aria-hidden
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  </span>
-                </button>
-
-                {open === i && (
-                  <div className="px-6 pb-6 text-zinc-400 leading-relaxed text-sm">
-                    {item.a}
+                      +
+                    </span>
+                  </button>
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="pb-6 text-white/60 leading-relaxed">
+                      {item.a}
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         </AnimateIn>
       </div>

@@ -32,7 +32,7 @@ export default function Pricing() {
   return (
     <section
       id="pricing"
-      className="relative py-28 px-6 bg-zinc-950 noise overflow-hidden border-t border-zinc-800/40"
+      className="relative py-28 px-6 bg-zinc-950 noise overflow-hidden border-t border-white/10"
     >
       <div
         className="absolute top-[-25%] left-[10%] w-[500px] h-[500px] rounded-full bg-brand-600/12 blur-[120px] float-slow pointer-events-none"
