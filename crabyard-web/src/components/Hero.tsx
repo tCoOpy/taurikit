@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+const MACOS_FIX_CMD = "xattr -rd com.apple.quarantine /Applications/Openscreen.app";
 
 const WORDS = ["minutes", "seconds", "5 steps"];
 
@@ -49,6 +51,17 @@ const TECH = [
 
 export default function Hero() {
   const wordRef = useRef<HTMLSpanElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyMacOSFix = async () => {
+    try {
+      await navigator.clipboard.writeText(MACOS_FIX_CMD);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // clipboard unavailable
+    }
+  };
 
   useEffect(() => {
     let wordIndex = 0;
@@ -99,15 +112,15 @@ export default function Hero() {
     <section className="relative min-h-screen flex flex-col items-center justify-start pt-36 sm:pt-44 pb-20 px-4 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#071724] to-black" aria-hidden>
         <div
-          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-brand-500/15 rounded-full blur-[120px] animate-pulse"
+          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-brand-500/5 rounded-full blur-[140px] animate-pulse"
           style={{ animationDuration: "4s" }}
         />
         <div
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-400/10 rounded-full blur-[120px] animate-pulse"
+          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-400/[0.04] rounded-full blur-[140px] animate-pulse"
           style={{ animationDuration: "6s", animationDelay: "2s" }}
         />
       </div>
-      <div className="absolute inset-0 opacity-15 os-grid-mask pointer-events-none" aria-hidden />
+      <div className="absolute inset-0 opacity-50 os-grid-mask pointer-events-none" aria-hidden />
 
       <div className="relative z-10 max-w-5xl mx-auto w-full text-center flex flex-col items-center">
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-[1.05] mb-6">
@@ -164,6 +177,40 @@ export default function Hero() {
           One-time purchase · Unlimited projects · Free updates forever
         </p>
 
+        <div className="mb-12 w-full max-w-2xl mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-3 text-white/60">
+            <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="10" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
+            </svg>
+            <span className="text-xs sm:text-sm">
+              If macOS says &ldquo;App is damaged&rdquo;, run this command
+            </span>
+          </div>
+          <div className="flex items-stretch rounded-lg overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm font-mono text-left shadow-lg">
+            <code className="flex-1 px-4 py-2.5 text-xs sm:text-sm text-zinc-300 overflow-x-auto whitespace-nowrap">
+              {MACOS_FIX_CMD}
+            </code>
+            <button
+              type="button"
+              onClick={copyMacOSFix}
+              aria-label="Copy command"
+              className="px-3 border-l border-white/10 text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
+            >
+              {copied ? (
+                <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <rect x="9" y="9" width="11" height="11" rx="2" strokeLinejoin="round" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15V5a2 2 0 012-2h10" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
         <div className="mb-14 w-full">
           <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-medium mb-5">
             Built with battle-tested technology
@@ -182,7 +229,7 @@ export default function Hero() {
         </div>
 
         <div className="relative max-w-3xl mx-auto w-full group">
-          <div className="absolute -inset-8 bg-gradient-to-r from-brand-500/30 to-brand-300/30 rounded-3xl blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-500" aria-hidden />
+          <div className="absolute -inset-8 bg-gradient-to-r from-brand-500/15 to-brand-300/15 rounded-3xl blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" aria-hidden />
           <div className="relative glass rounded-2xl p-6 text-left font-mono text-sm shadow-2xl shadow-black/60">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-3 h-3 rounded-full bg-zinc-700 hover:bg-red-500 transition-colors" />
