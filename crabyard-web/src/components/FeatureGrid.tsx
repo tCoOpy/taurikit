@@ -1,4 +1,7 @@
+"use client";
+
 import { AnimateIn } from "./AnimateIn";
+import { useSplitReveal } from "@/hooks/useSplitReveal";
 
 const FEATURES = [
   {
@@ -100,35 +103,51 @@ const FEATURES = [
 ];
 
 export default function FeatureGrid() {
+  const h2Ref = useSplitReveal<HTMLHeadingElement>({ type: "chars", stagger: 0.02, y: 20 });
   return (
-    <section className="relative py-24 px-6 bg-zinc-950 noise overflow-hidden border-t border-white/10">
+    <section className="relative py-28 px-6 bg-abyss-950 noise overflow-hidden border-t border-cyan-400/10">
       <div
-        className="absolute top-[-20%] right-[-15%] w-[500px] h-[500px] rounded-full bg-brand-600/8 blur-[120px] pulse-glow pointer-events-none"
+        className="absolute top-[-20%] right-[-15%] w-[560px] h-[560px] rounded-full bg-cyan-500/8 blur-[130px] pulse-glow pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] rounded-full bg-brand-500/6 blur-[100px] float-slow pointer-events-none"
+        className="absolute bottom-[-10%] left-[-10%] w-[460px] h-[460px] rounded-full bg-crab-500/6 blur-[110px] float-slow pointer-events-none"
         aria-hidden
       />
 
       <div className="relative z-10 max-w-6xl mx-auto">
         <AnimateIn className="text-center mb-14">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-100">
+          <h2
+            ref={h2Ref}
+            className="text-3xl md:text-4xl font-bold tracking-tight text-zinc-100"
+            style={{ fontFamily: "var(--font-display), var(--font-inter), sans-serif" }}
+          >
             And much more built in
           </h2>
         </AnimateIn>
         <AnimateIn delay={0.1}>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
+            {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="glow-card rounded-2xl bg-zinc-900/80 backdrop-blur-sm border border-zinc-800/50 p-6"
+                data-cursor="hover"
+                className="group glow-card rounded-2xl glass p-6 relative overflow-hidden"
               >
-                <div className="w-11 h-11 rounded-xl bg-brand-500/10 border border-brand-500/15 flex items-center justify-center text-brand-400 mb-4">
+                <div
+                  className="absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                  style={{
+                    background:
+                      i % 2 === 0
+                        ? "linear-gradient(135deg, rgba(34,211,238,0.18), transparent 60%)"
+                        : "linear-gradient(135deg, rgba(255,107,122,0.14), transparent 60%)",
+                  }}
+                  aria-hidden
+                />
+                <div className="relative w-11 h-11 rounded-xl bg-cyan-400/10 border border-cyan-400/25 flex items-center justify-center text-cyan-300 mb-4 group-hover:scale-105 group-hover:text-white transition-all">
                   {f.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-zinc-100 mb-2">{f.title}</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed">{f.description}</p>
+                <h3 className="relative text-lg font-semibold text-zinc-100 mb-2">{f.title}</h3>
+                <p className="relative text-zinc-400 text-sm leading-relaxed">{f.description}</p>
               </div>
             ))}
           </div>

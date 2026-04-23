@@ -1,6 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import MagneticButton from "./MagneticButton";
+import BrandMark from "./BrandMark";
+import { useSplitReveal } from "@/hooks/useSplitReveal";
+import StaticCrabBackdrop from "./three/StaticCrabBackdrop";
+
+const CrabScene = dynamic(() => import("./three/CrabScene"), {
+  ssr: false,
+  loading: () => <StaticCrabBackdrop />,
+});
 
 const MACOS_FIX_CMD = "xattr -rd com.apple.quarantine /Applications/Openscreen.app";
 
@@ -10,7 +20,7 @@ const TECH = [
   {
     name: "Rust",
     svg: (
-      <svg className="w-6 h-6" viewBox="0 0 106 106" fill="currentColor">
+      <svg className="w-5 h-5" viewBox="0 0 106 106" fill="currentColor">
         <path d="M53 0C23.7 0 0 23.7 0 53s23.7 53 53 53 53-23.7 53-53S82.3 0 53 0zm29.5 78.6c-1.4 2.4-4.5 3.2-6.9 1.8L53 66.9 30.4 80.4c-2.4 1.4-5.5.6-6.9-1.8-1.4-2.4-.6-5.5 1.8-6.9L47.8 58V32.7c0-2.8 2.3-5.1 5.1-5.1s5.1 2.3 5.1 5.1V58l22.5 13.6c2.5 1.5 3.3 4.6 1.9 7z" />
       </svg>
     ),
@@ -52,6 +62,7 @@ const TECH = [
 export default function Hero() {
   const wordRef = useRef<HTMLSpanElement>(null);
   const [copied, setCopied] = useState(false);
+  const h1Ref = useSplitReveal<HTMLHeadingElement>({ type: "chars", stagger: 0.018, y: 30 });
 
   const copyMacOSFix = async () => {
     try {
@@ -110,76 +121,86 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-start pt-36 sm:pt-44 pb-20 px-4 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-[#071724] to-black" aria-hidden>
-        <div
-          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-brand-500/5 rounded-full blur-[140px] animate-pulse"
-          style={{ animationDuration: "4s" }}
-        />
-        <div
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-brand-400/[0.04] rounded-full blur-[140px] animate-pulse"
-          style={{ animationDuration: "6s", animationDelay: "2s" }}
-        />
-      </div>
-      <div className="absolute inset-0 opacity-50 os-grid-mask pointer-events-none" aria-hidden />
+      <CrabScene />
 
       <div className="relative z-10 max-w-5xl mx-auto w-full text-center flex flex-col items-center">
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-[1.05] mb-6">
+        <div className="mb-6 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-[11px] uppercase tracking-[0.2em] text-cyan-300 backdrop-blur-sm">
+          <span className="w-1.5 h-1.5 rounded-full bg-crab-400 animate-pulse" />
+          Ship Rust apps, not yak shavings
+        </div>
+
+        <h1
+          ref={h1Ref}
+          className="text-5xl md:text-6xl lg:text-7xl font-bold text-white tracking-tight leading-[1.05] mb-6"
+          style={{ fontFamily: "var(--font-display), var(--font-inter), sans-serif" }}
+        >
           <span className="inline-block">Ship desktop apps in</span>
           <br />
           <span className="inline-flex items-baseline gap-2 sm:gap-3">
             <span
               ref={wordRef}
-              className="bg-gradient-to-r from-brand-400 via-brand-300 to-brand-400 bg-clip-text text-transparent animate-gradient inline-block min-w-[3ch] text-left"
+              className="text-gradient-brand animate-gradient inline-block min-w-[3ch] text-left"
             />
-            <span className="typing-cursor text-brand-400" />
+            <span className="typing-cursor text-cyan-400" />
           </span>
           <br />
-          <span className="inline-block text-white/90">with Crabyard.</span>
+          <span className="inline-flex items-center gap-3 text-white/95">
+            <span>with</span>
+            <BrandMark size={64} gap="0.2em" />
+            <span>.</span>
+          </span>
         </h1>
 
-        <p className="text-base md:text-lg text-white/50 max-w-2xl mx-auto mb-3 leading-relaxed font-light">
+        <p className="text-base md:text-lg text-white/60 max-w-2xl mx-auto mb-3 leading-relaxed font-light">
           A production-ready starter kit for Rust Tauri desktop apps. Auth,
           settings, UI components, auto-updates — all wired up.
         </p>
-        <p className="text-sm text-white/30 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-sm text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed">
           Pick your stack · Run one command · Start building
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
-          <a
-            href="/#pricing"
-            className="group px-8 py-3 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-xl font-bold text-base inline-flex items-center gap-3 shadow-2xl shadow-brand-500/25 hover:shadow-brand-500/45 hover:-translate-y-1 transition-all active:scale-[0.98]"
-          >
-            Get Crabyard — $49
-            <svg
-              className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <MagneticButton strength={0.35}>
+            <a
+              href="/#pricing"
+              data-cursor="hover"
+              aria-label="Get Blue Crab Yard for $49"
+              className="btn-glass group px-9 py-3.5 rounded-xl font-bold text-base inline-flex items-center gap-2.5 whitespace-nowrap"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </a>
+              <span>Get</span>
+              <BrandMark size={26} gap="0.2em" />
+              <span>— $49</span>
+              <svg
+                className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </a>
+          </MagneticButton>
           <a
             href="/#features"
-            className="px-8 py-3 border border-white/15 hover:border-white/30 text-zinc-300 hover:text-white rounded-xl font-medium text-base transition-all backdrop-blur-sm"
+            data-cursor="hover"
+            className="btn-glass-ghost px-8 py-3.5 rounded-xl font-medium text-base"
           >
             See what&apos;s included
           </a>
         </div>
 
-        <p className="text-white/30 text-xs sm:text-sm font-medium mb-10">
+        <p className="text-white/40 text-xs sm:text-sm font-medium mb-10">
           One-time purchase · Unlimited projects · Free updates forever
         </p>
 
         <div className="mb-12 w-full max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-2 mb-3 text-white/60">
-            <svg className="w-4 h-4 text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <circle cx="12" cy="12" r="10" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
             </svg>
@@ -187,18 +208,19 @@ export default function Hero() {
               If macOS says &ldquo;App is damaged&rdquo;, run this command
             </span>
           </div>
-          <div className="flex items-stretch rounded-lg overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm font-mono text-left shadow-lg">
-            <code className="flex-1 px-4 py-2.5 text-xs sm:text-sm text-zinc-300 overflow-x-auto whitespace-nowrap">
+          <div className="flex items-stretch rounded-lg overflow-hidden glass font-mono text-left shadow-lg">
+            <code className="flex-1 px-4 py-2.5 text-xs sm:text-sm text-cyan-100/90 overflow-x-auto whitespace-nowrap">
               {MACOS_FIX_CMD}
             </code>
             <button
               type="button"
               onClick={copyMacOSFix}
               aria-label="Copy command"
-              className="px-3 border-l border-white/10 text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
+              data-cursor="hover"
+              className="btn-glass-ghost px-3 flex items-center justify-center rounded-none"
             >
               {copied ? (
-                <svg className="w-4 h-4 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               ) : (
@@ -212,60 +234,62 @@ export default function Hero() {
         </div>
 
         <div className="mb-14 w-full">
-          <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-medium mb-5">
+          <p className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-medium mb-5">
             Built with battle-tested technology
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 sm:gap-x-12">
-            {TECH.map((t) => (
-              <div
-                key={t.name}
-                className="flex items-center gap-2 text-white/50 hover:text-white/90 transition-colors"
-              >
-                {t.svg}
-                <span className="text-sm font-semibold">{t.name}</span>
-              </div>
-            ))}
+          <div className="relative overflow-hidden mask-fade-x">
+            <div className="marquee-track flex items-center gap-12 w-max">
+              {[...TECH, ...TECH, ...TECH].map((t, i) => (
+                <div
+                  key={`${t.name}-${i}`}
+                  className="flex items-center gap-2 text-white/60 hover:text-cyan-300 transition-colors shrink-0"
+                >
+                  {t.svg}
+                  <span className="text-sm font-semibold tracking-wide">{t.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="relative max-w-3xl mx-auto w-full group">
-          <div className="absolute -inset-8 bg-gradient-to-r from-brand-500/15 to-brand-300/15 rounded-3xl blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" aria-hidden />
+          <div className="absolute -inset-8 bg-gradient-to-r from-cyan-500/20 via-blue-500/10 to-crab-500/20 rounded-3xl blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-500" aria-hidden />
           <div className="relative glass rounded-2xl p-6 text-left font-mono text-sm shadow-2xl shadow-black/60">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-3 h-3 rounded-full bg-zinc-700 hover:bg-red-500 transition-colors" />
-              <div className="w-3 h-3 rounded-full bg-zinc-700 hover:bg-yellow-500 transition-colors" />
-              <div className="w-3 h-3 rounded-full bg-zinc-700 hover:bg-green-500 transition-colors" />
-              <span className="ml-auto text-[10px] text-zinc-600 uppercase tracking-widest">
+              <div className="w-3 h-3 rounded-full bg-crab-500/40 hover:bg-crab-500 transition-colors" />
+              <div className="w-3 h-3 rounded-full bg-cyan-400/40 hover:bg-cyan-400 transition-colors" />
+              <div className="w-3 h-3 rounded-full bg-blue-500/40 hover:bg-blue-500 transition-colors" />
+              <span className="ml-auto text-[10px] text-zinc-500 uppercase tracking-widest">
                 terminal
               </span>
             </div>
-            <div className="text-zinc-400">
-              <span className="text-zinc-600">$</span>
-              <span className="text-brand-400"> crabyard</span>
-              <span className="text-zinc-300"> new</span>
-              <span className="text-green-400"> &quot;My App&quot;</span>
-              <span className="text-zinc-600"> --auth github --ui shadcn</span>
+            <div className="text-zinc-300">
+              <span className="text-zinc-500">$</span>
+              <span className="text-cyan-300"> crabyard</span>
+              <span className="text-zinc-200"> new</span>
+              <span className="text-crab-400"> &quot;My App&quot;</span>
+              <span className="text-zinc-500"> --auth github --ui shadcn</span>
             </div>
-            <div className="mt-3 space-y-1.5 text-zinc-500">
+            <div className="mt-3 space-y-1.5 text-zinc-400">
               <div>
-                <span className="text-green-400/80">✓</span> Copied base template
+                <span className="text-cyan-300">✓</span> Copied base template
               </div>
               <div>
-                <span className="text-green-400/80">✓</span> Applied auth/github overlay
+                <span className="text-cyan-300">✓</span> Applied auth/github overlay
               </div>
               <div>
-                <span className="text-green-400/80">✓</span> Applied ui/shadcn overlay
+                <span className="text-cyan-300">✓</span> Applied ui/shadcn overlay
               </div>
               <div>
-                <span className="text-green-400/80">✓</span> Installed 247 packages
+                <span className="text-cyan-300">✓</span> Installed 247 packages
               </div>
-              <div className="text-green-400">✓ Project ready at ./my-app</div>
+              <div className="text-cyan-200">✓ Project ready at ./my-app</div>
             </div>
           </div>
-          <div className="absolute -top-4 -left-4 w-8 h-8 border-l-2 border-t-2 border-brand-500/50 rounded-tl-lg" aria-hidden />
-          <div className="absolute -top-4 -right-4 w-8 h-8 border-r-2 border-t-2 border-brand-500/50 rounded-tr-lg" aria-hidden />
-          <div className="absolute -bottom-4 -left-4 w-8 h-8 border-l-2 border-b-2 border-brand-500/50 rounded-bl-lg" aria-hidden />
-          <div className="absolute -bottom-4 -right-4 w-8 h-8 border-r-2 border-b-2 border-brand-500/50 rounded-br-lg" aria-hidden />
+          <div className="absolute -top-4 -left-4 w-8 h-8 border-l-2 border-t-2 border-cyan-400/60 rounded-tl-lg" aria-hidden />
+          <div className="absolute -top-4 -right-4 w-8 h-8 border-r-2 border-t-2 border-cyan-400/60 rounded-tr-lg" aria-hidden />
+          <div className="absolute -bottom-4 -left-4 w-8 h-8 border-l-2 border-b-2 border-crab-500/60 rounded-bl-lg" aria-hidden />
+          <div className="absolute -bottom-4 -right-4 w-8 h-8 border-r-2 border-b-2 border-crab-500/60 rounded-br-lg" aria-hidden />
         </div>
       </div>
     </section>

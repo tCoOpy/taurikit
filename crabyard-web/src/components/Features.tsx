@@ -1,18 +1,23 @@
+"use client";
+
 import { AnimateIn } from "./AnimateIn";
+import BrandMark from "./BrandMark";
+import { useSplitReveal } from "@/hooks/useSplitReveal";
 
 function CodeWindow({ title, code }: { title: string; code: string }) {
   return (
-    <div className="rounded-2xl bg-zinc-900 border border-zinc-800/60 shadow-2xl shadow-black/40">
-      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-zinc-800/60">
-        <div className="w-3 h-3 rounded-full bg-zinc-700" />
-        <div className="w-3 h-3 rounded-full bg-zinc-700" />
-        <div className="w-3 h-3 rounded-full bg-zinc-700" />
-        <span className="ml-auto text-[10px] text-zinc-600 uppercase tracking-widest font-mono">
+    <div className="group relative rounded-2xl glass shadow-2xl shadow-black/50 glow-card">
+      <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-cyan-400/20 via-transparent to-crab-500/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" aria-hidden />
+      <div className="relative flex items-center gap-2 px-5 py-3.5 border-b border-cyan-400/10">
+        <div className="w-3 h-3 rounded-full bg-crab-500/50" />
+        <div className="w-3 h-3 rounded-full bg-cyan-400/50" />
+        <div className="w-3 h-3 rounded-full bg-blue-500/50" />
+        <span className="ml-auto text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
           {title}
         </span>
       </div>
       <pre
-        className="text-[13px] leading-relaxed font-mono overflow-x-auto p-5"
+        className="relative text-[13px] leading-relaxed font-mono overflow-x-auto p-5"
         dangerouslySetInnerHTML={{ __html: code }}
       />
     </div>
@@ -55,23 +60,36 @@ const structureCode = `<span class="text-zinc-400">my-app/</span>
 
 function Check() {
   return (
-    <span className="text-green-400 font-bold shrink-0">✓</span>
+    <span className="text-cyan-300 font-bold shrink-0">✓</span>
   );
 }
 
 export default function Features() {
+  const h2Ref = useSplitReveal<HTMLHeadingElement>({ type: "chars", stagger: 0.015, y: 24 });
   return (
-    <section id="features" className="py-28 px-6 border-t border-white/10">
-      <div className="max-w-6xl mx-auto">
+    <section id="features" className="relative py-28 px-6 border-t border-cyan-400/10 overflow-hidden">
+      <div
+        className="absolute top-20 -left-20 w-[480px] h-[480px] rounded-full blur-[140px] bg-blue-600/8 pointer-events-none"
+        aria-hidden
+      />
+      <div
+        className="absolute bottom-0 right-0 w-[480px] h-[480px] rounded-full blur-[140px] bg-cyan-500/6 pointer-events-none"
+        aria-hidden
+      />
+      <div className="max-w-6xl mx-auto relative">
         <AnimateIn className="text-center mb-20">
-          <p className="text-brand-500 text-sm font-semibold uppercase tracking-[0.15em] mb-3">
+          <p className="text-cyan-300 text-sm font-semibold uppercase tracking-[0.2em] mb-3">
             Features
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-100">
+          <h2
+            ref={h2Ref}
+            className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-100"
+            style={{ fontFamily: "var(--font-display), var(--font-inter), sans-serif" }}
+          >
             Everything you need to ship
           </h2>
-          <p className="mt-4 text-zinc-500 text-lg max-w-2xl mx-auto font-light">
-            Stop wiring boilerplate. Crabyard gives you a complete foundation so
+          <p className="mt-4 text-zinc-400 text-lg max-w-2xl mx-auto font-light">
+            Stop wiring boilerplate. <BrandMark size={18} gap="0.12em" /> gives you a complete foundation so
             you can focus on what makes your app unique.
           </p>
         </AnimateIn>
@@ -80,7 +98,7 @@ export default function Features() {
           {/* Feature 1: Auth */}
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             <AnimateIn className="lg:w-1/2 order-2 lg:order-1" delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-400 text-xs font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-300 text-xs font-semibold mb-4">
                 Authentication
               </div>
               <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 mb-4">
@@ -114,7 +132,7 @@ export default function Features() {
               <CodeWindow title="terminal" code={uiCode} />
             </AnimateIn>
             <AnimateIn className="lg:w-1/2" delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-400 text-xs font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-300 text-xs font-semibold mb-4">
                 Customizable
               </div>
               <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 mb-4">
@@ -142,7 +160,7 @@ export default function Features() {
           {/* Feature 3: Architecture */}
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             <AnimateIn className="lg:w-1/2 order-2 lg:order-1" delay={0.1}>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 text-brand-400 text-xs font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-400/10 border border-cyan-400/20 text-cyan-300 text-xs font-semibold mb-4">
                 Architecture
               </div>
               <h3 className="text-2xl md:text-3xl font-bold text-zinc-100 mb-4">

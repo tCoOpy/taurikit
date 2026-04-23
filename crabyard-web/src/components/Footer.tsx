@@ -1,46 +1,54 @@
 import Link from "next/link";
+import BrandMark from "./BrandMark";
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-black text-zinc-400 pt-16 pb-8 px-6 border-t border-white/10">
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-brand-500/5 rounded-full blur-[100px] pointer-events-none" aria-hidden />
+    <footer className="relative overflow-hidden bg-abyss-950 text-zinc-400 pt-20 pb-8 px-6 border-t border-cyan-400/10">
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[640px] h-[360px] rounded-full blur-[120px] pointer-events-none bg-cyan-500/8"
+        aria-hidden
+      />
+      <div
+        className="absolute top-10 right-10 w-[320px] h-[320px] rounded-full blur-[120px] pointer-events-none bg-crab-500/8"
+        aria-hidden
+      />
       <div className="max-w-6xl mx-auto relative">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
           <div className="sm:col-span-2 lg:col-span-1">
-            <Link href="/" className="text-xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent">
-                Crab
-              </span>
-              <span className="text-white">Yard</span>
+            <Link
+              href="/"
+              className="inline-flex items-center text-xl font-bold tracking-tight"
+              aria-label="Blue Crab Yard"
+            >
+              <BrandMark size={36} />
             </Link>
-            <p className="mt-3 text-sm text-zinc-600 leading-relaxed max-w-xs">
-              Ship production-ready Rust Tauri desktop apps in minutes, not
-              months.
+            <p className="mt-4 text-sm text-zinc-500 leading-relaxed max-w-xs">
+              Ship production-ready Rust Tauri desktop apps in minutes, not months.
             </p>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-[0.15em] mb-4">
+            <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-[0.15em] mb-4">
               Product
             </h4>
-            <ul className="space-y-2.5 text-sm text-zinc-600">
+            <ul className="space-y-2.5 text-sm text-zinc-500">
               <li>
-                <a href="/#features" className="hover:text-zinc-300 transition-colors">
+                <a href="/#features" className="hover:text-cyan-300 transition-colors">
                   Features
                 </a>
               </li>
               <li>
-                <a href="/#pricing" className="hover:text-zinc-300 transition-colors">
+                <a href="/#pricing" className="hover:text-cyan-300 transition-colors">
                   Pricing
                 </a>
               </li>
               <li>
-                <Link href="/changelog" className="hover:text-zinc-300 transition-colors">
+                <Link href="/changelog" className="hover:text-cyan-300 transition-colors">
                   Changelog
                 </Link>
               </li>
               <li>
-                <Link href="/compare" className="hover:text-zinc-300 transition-colors">
+                <Link href="/compare" className="hover:text-cyan-300 transition-colors">
                   Comparison
                 </Link>
               </li>
@@ -48,14 +56,14 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-[0.15em] mb-4">
+            <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-[0.15em] mb-4">
               Resources
             </h4>
-            <ul className="space-y-2.5 text-sm text-zinc-600">
+            <ul className="space-y-2.5 text-sm text-zinc-500">
               <li>
                 <a
                   href="https://docs.crabyard.dev"
-                  className="hover:text-zinc-300 transition-colors"
+                  className="hover:text-cyan-300 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -65,7 +73,7 @@ export default function Footer() {
               <li>
                 <a
                   href="https://github.com/tCoOpy/crabyard"
-                  className="hover:text-zinc-300 transition-colors"
+                  className="hover:text-cyan-300 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -75,7 +83,7 @@ export default function Footer() {
               <li>
                 <a
                   href="mailto:support@crabyard.dev"
-                  className="hover:text-zinc-300 transition-colors"
+                  className="hover:text-cyan-300 transition-colors"
                 >
                   Support
                 </a>
@@ -84,17 +92,17 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-[0.15em] mb-4">
+            <h4 className="text-xs font-semibold text-zinc-300 uppercase tracking-[0.15em] mb-4">
               Legal
             </h4>
-            <ul className="space-y-2.5 text-sm text-zinc-600">
+            <ul className="space-y-2.5 text-sm text-zinc-500">
               <li>
-                <Link href="/terms" className="hover:text-zinc-300 transition-colors">
+                <Link href="/terms" className="hover:text-cyan-300 transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-zinc-300 transition-colors">
+                <Link href="/privacy" className="hover:text-cyan-300 transition-colors">
                   Privacy Policy
                 </Link>
               </li>
@@ -102,14 +110,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-zinc-700">
-            &copy; {new Date().getFullYear()} Crabyard. All rights reserved.
+        <div className="border-t border-cyan-400/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-xs text-zinc-600 inline-flex items-center gap-1">
+            <span>&copy; {new Date().getFullYear()}</span>
+            <BrandMark size={14} gap="0.15em" yardClassName="text-zinc-500" />
+            <span>. All rights reserved.</span>
           </p>
           <div className="flex items-center gap-4">
             <a
               href="https://github.com/tCoOpy/crabyard"
-              className="text-zinc-700 hover:text-zinc-400 transition-colors"
+              className="text-zinc-600 hover:text-cyan-300 transition-colors"
               aria-label="GitHub"
               target="_blank"
               rel="noopener noreferrer"
@@ -120,7 +130,7 @@ export default function Footer() {
             </a>
             <a
               href="https://x.com/crabyard"
-              className="text-zinc-700 hover:text-zinc-400 transition-colors"
+              className="text-zinc-600 hover:text-cyan-300 transition-colors"
               aria-label="X (Twitter)"
               target="_blank"
               rel="noopener noreferrer"

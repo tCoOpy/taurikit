@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import BrandMark from "./BrandMark";
+import MagneticButton from "./MagneticButton";
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -9,24 +11,26 @@ export default function Nav() {
 
   return (
     <nav className="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] sm:w-[90%] max-w-5xl">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 glass rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.55)]">
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link href="/" className="text-lg sm:text-xl font-bold tracking-tight">
-            <span className="bg-gradient-to-r from-brand-400 to-brand-500 bg-clip-text text-transparent pr-px">
-              Crab
-            </span>
-            <span className="text-white">Yard</span>
+          <Link
+            href="/"
+            className="flex items-center text-lg sm:text-xl font-bold tracking-tight"
+            data-cursor="hover"
+            aria-label="Blue Crab Yard"
+          >
+            <BrandMark size={34} />
           </Link>
-          <span className="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-brand-400 bg-brand-400/10 border border-brand-400/20 rounded-full">
+          <span className="px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-cyan-300 bg-cyan-400/10 border border-cyan-400/25 rounded-full">
             Beta
           </span>
         </div>
 
         <div className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-400">
-          <a href="/#features" className="hover:text-zinc-100 transition-colors">
+          <a href="/#features" className="hover:text-zinc-100 transition-colors" data-cursor="hover">
             Features
           </a>
-          <a href="/#pricing" className="hover:text-zinc-100 transition-colors">
+          <a href="/#pricing" className="hover:text-zinc-100 transition-colors" data-cursor="hover">
             Pricing
           </a>
           <a
@@ -34,18 +38,24 @@ export default function Nav() {
             className="hover:text-zinc-100 transition-colors"
             target="_blank"
             rel="noopener noreferrer"
+            data-cursor="hover"
           >
             Docs
           </a>
-          <Link href="/changelog" className="hover:text-zinc-100 transition-colors">
+          <Link href="/changelog" className="hover:text-zinc-100 transition-colors" data-cursor="hover">
             Changelog
           </Link>
-          <a
-            href="/#pricing"
-            className="px-4 py-2 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-full text-sm font-semibold shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 hover:-translate-y-0.5 transition-all active:scale-[0.98]"
-          >
-            Get Crabyard
-          </a>
+          <MagneticButton>
+            <a
+              href="/#pricing"
+              data-cursor="hover"
+              aria-label="Get Blue Crab Yard"
+              className="btn-glass inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap hover:-translate-y-0.5"
+            >
+              <span>Get</span>
+              <BrandMark size={22} gap="0.2em" />
+            </a>
+          </MagneticButton>
         </div>
 
         <button
@@ -74,7 +84,7 @@ export default function Nav() {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden mt-2 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl px-5 py-4 space-y-1 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        <div className="md:hidden mt-2 glass rounded-2xl px-5 py-4 space-y-1 shadow-[0_8px_32px_rgba(0,0,0,0.55)]">
           <a
             href="/#features"
             className="block text-sm font-medium text-zinc-300 hover:text-white py-2"
@@ -106,10 +116,12 @@ export default function Nav() {
           </Link>
           <a
             href="/#pricing"
-            className="block text-center px-5 py-2.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-full font-semibold mt-2"
+            aria-label="Get Blue Crab Yard"
+            className="btn-glass flex items-center justify-center gap-2 px-6 py-3 rounded-full font-semibold whitespace-nowrap mt-2"
             onClick={close}
           >
-            Get Crabyard
+            <span>Get</span>
+            <BrandMark size={22} gap="0.2em" />
           </a>
         </div>
       )}
