@@ -2,7 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const MACOS_FIX_CMD = "xattr -rd com.apple.quarantine /Applications/Openscreen.app";
+const SETUP_COMMANDS = [
+  {
+    id: "unix",
+    label: "macOS / Linux",
+    command: "curl -fsSL https://crabyard.dev/setup.sh | sh",
+  },
+  {
+    id: "windows",
+    label: "Windows",
+    command: "irm https://crabyard.dev/setup.ps1 | iex",
+  },
+] as const;
+
+type PlatformId = (typeof SETUP_COMMANDS)[number]["id"];
 
 const WORDS = ["minutes", "seconds", "5 steps"];
 
@@ -52,15 +65,21 @@ const TECH = [
 export default function Hero() {
   const wordRef = useRef<HTMLSpanElement>(null);
   const [copied, setCopied] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformId>("unix");
+  const selectedSetup =
+    SETUP_COMMANDS.find((item) => item.id === selectedPlatform) ?? SETUP_COMMANDS[0];
 
-  const copyMacOSFix = async () => {
+  const selectPlatform = (platform: PlatformId) => {
+    setSelectedPlatform(platform);
+    setCopied(false);
+  };
+
+  const copySetupCommand = async () => {
     try {
-      await navigator.clipboard.writeText(MACOS_FIX_CMD);
+      await navigator.clipboard.writeText(selectedSetup.command);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    } catch {
-      // clipboard unavailable
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -147,10 +166,10 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
           <a
-            href="/#pricing"
+            href="/#get-started"
             className="group px-8 py-3 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-xl font-bold text-base inline-flex items-center gap-3 shadow-2xl shadow-brand-500/25 hover:shadow-brand-500/45 hover:-translate-y-1 transition-all active:scale-[0.98]"
           >
-            Get Crabyard — $49
+            Get started free
             <svg
               className="w-5 h-5 group-hover:translate-x-1 transition-transform"
               fill="none"
@@ -174,7 +193,7 @@ export default function Hero() {
         </div>
 
         <p className="text-white/30 text-xs sm:text-sm font-medium mb-10">
-          One-time purchase · Unlimited projects · Free updates forever
+          Free to use · Unlimited projects · Free updates
         </p>
 
         <div className="mb-12 w-full max-w-2xl mx-auto">
@@ -184,17 +203,37 @@ export default function Hero() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01" />
             </svg>
             <span className="text-xs sm:text-sm">
-              If macOS says &ldquo;App is damaged&rdquo;, run this command
+              Install the CLI and start the setup wizard
             </span>
+          </div>
+          <div className="mb-3 inline-flex w-full sm:w-auto rounded-lg border border-white/10 bg-black/30 p-1">
+            {SETUP_COMMANDS.map((item) => {
+              const selected = selectedPlatform === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => selectPlatform(item.id)}
+                  aria-pressed={selected}
+                  className={`h-8 flex-1 sm:flex-none rounded-md px-4 text-xs font-semibold transition-colors ${
+                    selected
+                      ? "bg-brand-500/15 text-brand-300"
+                      : "text-white/45 hover:text-white"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
           <div className="flex items-stretch rounded-lg overflow-hidden border border-white/10 bg-black/40 backdrop-blur-sm font-mono text-left shadow-lg">
             <code className="flex-1 px-4 py-2.5 text-xs sm:text-sm text-zinc-300 overflow-x-auto whitespace-nowrap">
-              {MACOS_FIX_CMD}
+              {selectedSetup.command}
             </code>
             <button
               type="button"
-              onClick={copyMacOSFix}
-              aria-label="Copy command"
+              onClick={copySetupCommand}
+              aria-label="Copy setup command"
               className="px-3 border-l border-white/10 text-white/50 hover:text-white hover:bg-white/5 transition-colors flex items-center justify-center"
             >
               {copied ? (

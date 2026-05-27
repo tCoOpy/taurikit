@@ -30,8 +30,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/#pricing" className="hover:text-zinc-300 transition-colors">
-                  Pricing
+                <a href="/#get-started" className="hover:text-zinc-300 transition-colors">
+                  Get started
                 </a>
               </li>
               <li>

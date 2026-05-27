@@ -101,10 +101,10 @@ export default function ComparePage() {
 
           <div className="mt-14 text-center">
             <Link
-              href="/#pricing"
+              href="/#get-started"
               className="inline-flex items-center gap-3 px-8 py-3.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-xl font-bold text-lg shadow-xl shadow-brand-500/20 hover:shadow-brand-500/40 hover:-translate-y-1 transition-all active:scale-[0.98]"
             >
-              Get Crabyard — $49
+              Get started free
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -120,7 +120,7 @@ export default function ComparePage() {
               </svg>
             </Link>
             <p className="mt-4 text-sm text-zinc-600">
-              One-time purchase. Unlimited projects. Free updates forever.
+              Free to use. Unlimited projects. Free updates.
             </p>
           </div>
         </AnimateIn>

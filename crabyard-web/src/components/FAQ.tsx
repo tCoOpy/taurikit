@@ -5,12 +5,12 @@ import { AnimateIn } from "./AnimateIn";
 
 const QUESTIONS = [
   {
-    q: "What do I get after purchase?",
-    a: "You receive a license key via email. Use it with the Crabyard CLI to generate unlimited projects. You get the full source code — no obfuscation, no lock-in.",
+    q: "What do I get?",
+    a: "You get the Crabyard CLI, project templates, and full generated source code. Run the setup wizard to generate unlimited projects with no obfuscation or lock-in.",
   },
   {
     q: "Can I use it for commercial projects?",
-    a: "Yes. The license covers personal and commercial use. Build and ship as many apps as you want.",
+    a: "Yes. Build and ship as many personal or commercial apps as you want.",
   },
   {
     q: "What if Tauri releases a new major version?",

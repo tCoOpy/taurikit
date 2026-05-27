@@ -2,7 +2,6 @@
 set -eu
 
 # Usage: curl -fsSL https://crabyard.dev/setup.sh | sh
-#   or:  curl -fsSL https://crabyard.dev/setup.sh | sh -s -- --license-key TK-xxxx
 
 API_BASE="https://taurikit-api-production.up.railway.app"
 BIN_NAME="crabyard"

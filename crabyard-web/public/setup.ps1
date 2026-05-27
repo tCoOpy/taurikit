@@ -2,10 +2,6 @@ $ErrorActionPreference = "Stop"
 
 # Usage:
 #   irm https://crabyard.dev/setup.ps1 | iex
-#   After install: crabyard new --license-key TK-xxxx
-#
-# Or with license key in environment:
-#   $env:CRABYARD_LICENSE_KEY = "TK-xxxx"; irm https://crabyard.dev/setup.ps1 | iex
 
 $ApiBase = "https://taurikit-api-production.up.railway.app"
 $BinName = "crabyard.exe"
@@ -31,14 +27,7 @@ function Main {
     Ensure-Bun
 
     $exe = Join-Path $InstallDir $BinName
-    $wizardArgs = @("new")
-
-    if ($env:CRABYARD_LICENSE_KEY) {
-        $wizardArgs += "--license-key"
-        $wizardArgs += $env:CRABYARD_LICENSE_KEY
-    }
-
-    & $exe @wizardArgs
+    & $exe new
 }
 
 function Install-Cli {

@@ -26,8 +26,8 @@ export default function Nav() {
           <a href="/#features" className="hover:text-zinc-100 transition-colors">
             Features
           </a>
-          <a href="/#pricing" className="hover:text-zinc-100 transition-colors">
-            Pricing
+          <a href="/#get-started" className="hover:text-zinc-100 transition-colors">
+            Get started
           </a>
           <a
             href="https://docs.crabyard.dev"
@@ -41,10 +41,10 @@ export default function Nav() {
             Changelog
           </Link>
           <a
-            href="/#pricing"
+            href="/#get-started"
             className="px-4 py-2 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-full text-sm font-semibold shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 hover:-translate-y-0.5 transition-all active:scale-[0.98]"
           >
-            Get Crabyard
+            Start free
           </a>
         </div>
 
@@ -83,11 +83,11 @@ export default function Nav() {
             Features
           </a>
           <a
-            href="/#pricing"
+            href="/#get-started"
             className="block text-sm font-medium text-zinc-300 hover:text-white py-2"
             onClick={close}
           >
-            Pricing
+            Get started
           </a>
           <a
             href="https://docs.crabyard.dev"
@@ -105,11 +105,11 @@ export default function Nav() {
             Changelog
           </Link>
           <a
-            href="/#pricing"
+            href="/#get-started"
             className="block text-center px-5 py-2.5 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-400 text-white rounded-full font-semibold mt-2"
             onClick={close}
           >
-            Get Crabyard
+            Start free
           </a>
         </div>
       )}
