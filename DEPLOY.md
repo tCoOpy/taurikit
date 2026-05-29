@@ -4,8 +4,8 @@ Step-by-step to get Crabyard live.
 
 ## Prerequisites
 
-- Railway account (for API + PostgreSQL)
-- Cloudflare account (Pages — for static sites)
+- Railway account (for API, PostgreSQL, and web app)
+- Cloudflare account (for DNS)
 - Stripe account (test or live)
 - Resend account (for email delivery)
 - Domain: `crabyard.dev`
@@ -14,7 +14,7 @@ Step-by-step to get Crabyard live.
 
 ### Create Railway project
 
-1. Go to https://railway.com/new → **Deploy from GitHub repo** → select `tCoOpy/crabyard`
+1. Go to https://railway.com/new → **Deploy from GitHub repo** → select `tCoOpy/taurikit`
 2. Set **Root Directory** to `crabyard-api`
 3. Add a **PostgreSQL** database service (click **+ New** → **Database** → **PostgreSQL**)
 4. Railway auto-injects `DATABASE_URL` when Postgres is linked
@@ -28,11 +28,12 @@ STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_ID=price_...
 RESEND_API_KEY=re_...
+GITHUB_TOKEN=ghp_...
 ADMIN_KEY=<generate-a-random-secret>
 PORT=3000
 ```
 
-Generate `ADMIN_KEY` with: `openssl rand -hex 32`
+Generate `ADMIN_KEY` with `openssl rand -hex 32`. `GITHUB_TOKEN` is used by `/cli/latest` and `/cli/download/:target` to read GitHub Release assets.
 
 ### Run migrations
 
@@ -42,12 +43,36 @@ After first deploy, open the Railway service shell or use the Railway CLI:
 railway run bun run db:migrate
 ```
 
-### Upload initial template
+### Verify and upload initial template
+
+Run this from the repository root before uploading a new template:
+
+```sh
+cd crabyard-cli
+cargo test
+cargo run -- new "Template Smoke Test" --template ../scaffold --yes --no-git --no-install --pm bun --auth none --ui shadcn --output /tmp/crabyard-template-smoke
+test -f /tmp/crabyard-template-smoke/AGENTS.md
+test -f /tmp/crabyard-template-smoke/CLAUDE.md
+test -f /tmp/crabyard-template-smoke/.cursorrules
+test -f /tmp/crabyard-template-smoke/.github/copilot-instructions.md
+! grep -R "{{" /tmp/crabyard-template-smoke/AGENTS.md /tmp/crabyard-template-smoke/CLAUDE.md /tmp/crabyard-template-smoke/.cursorrules /tmp/crabyard-template-smoke/.github/copilot-instructions.md
+cd ..
+```
+
+Then upload the scaffold:
 
 ```sh
 export API_URL=https://<your-railway-domain>
 export ADMIN_KEY=<your-admin-key>
-./scripts/upload-template.sh scaffold 0.1.0
+TEMPLATE_VERSION=1.6.0
+./crabyard-api/scripts/upload-template.sh scaffold "$TEMPLATE_VERSION"
+```
+
+The uploaded archive must include `base/AGENTS.md`, `base/CLAUDE.md`, `base/.cursorrules`, and `base/.github/copilot-instructions.md`. If you need to inspect a local package before upload:
+
+```sh
+tar -czf /tmp/crabyard-template-check.tar.gz -C scaffold --exclude='.git' --exclude='node_modules' --exclude='target' --exclude='.claude' --exclude='MEMORY.md' base auth ui manifest.toml
+tar -tzf /tmp/crabyard-template-check.tar.gz | grep -E 'base/(AGENTS.md|CLAUDE.md|\.cursorrules|\.github/copilot-instructions.md)'
 ```
 
 ### Custom domain
@@ -61,27 +86,38 @@ In Stripe Dashboard → Webhooks → Add endpoint:
 - Events: `checkout.session.completed`
 - Copy the signing secret → update `STRIPE_WEBHOOK_SECRET` in Railway variables
 
-## 2. Deploy the landing page (`crabyard-web`)
+## 2. Deploy the web app (`crabyard-web`)
 
-### Create Pages project
+### Create Railway service
+
+1. Go to https://railway.com/new → **Deploy from GitHub repo** → select `tCoOpy/taurikit`
+2. Set **Root Directory** to `crabyard-web`
+3. Railway should detect the `Dockerfile`
+4. The container listens on `PORT=3000`
+
+For a local production check:
 
 ```sh
 cd crabyard-web
+bun install
 bun run build
-
-# First deploy creates the project
-wrangler pages deploy dist --project-name=crabyard-web
+bun start
 ```
 
 ### Configure custom domain
 
-In the Cloudflare dashboard: Workers & Pages → crabyard-web → Custom domains → add `crabyard.dev`.
+Railway → web service → **Settings** → **Networking** → **Custom Domain** → add `crabyard.dev`.
 
-### CI/CD
+### Verify setup scripts
 
-Push to `main` triggers `.github/workflows/deploy.yml`. Set these GitHub repo secrets:
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
+The install and setup scripts live in `crabyard-web/public/` and are served by the web app:
+
+```sh
+curl -fsSL https://crabyard.dev/install.sh | sh
+curl -fsSL https://crabyard.dev/setup.sh | sh
+```
+
+They call the API service for CLI release metadata and binary downloads, so verify `GITHUB_TOKEN` is configured on the API before testing them.
 
 ## 3. Release the CLI (`crabyard-cli`)
 
@@ -110,7 +146,7 @@ The scripts download the CLI from GitHub Releases (release must exist first), th
 
 CLI-only install scripts are also available at `crabyard.dev/install.sh` and `crabyard.dev/install.ps1`.
 
-All scripts live in `crabyard-web/public/` and are served automatically by the landing page.
+All scripts live in `crabyard-web/public/` and are served automatically by the web app.
 
 ## 4. End-to-end verification
 
@@ -122,14 +158,10 @@ curl -fsSL https://crabyard.dev/setup.sh | sh
 # curl -fsSL https://crabyard.dev/install.sh | sh
 # crabyard doctor
 
-# 2. Insert a test license directly via Railway shell or CLI:
-# railway run bun -e "import pg from 'postgres'; const s=pg(process.env.DATABASE_URL); await s\`INSERT INTO licenses (id,email,key,plan) VALUES ('test','test@example.com','TK-TEST00000000-00000000-00000000-00000000-00000000','standard')\`; await s.end()"
-
-# 3. Generate a project
-export CRABYARD_LICENSE_KEY=TK-TEST00000000-00000000-00000000-00000000-00000000
+# 2. Generate a project
 crabyard new "Test App" --auth github --ui shadcn --yes
 
-# 4. Run it
+# 3. Run it
 cd test-app
 bun install
 bun run tauri dev
@@ -139,14 +171,12 @@ bun run tauri dev
 
 | Record | Type | Target |
 |--------|------|--------|
-| `crabyard.dev` | CNAME | Cloudflare Pages |
+| `crabyard.dev` | CNAME | Railway web service |
 | `api.crabyard.dev` | CNAME | Railway |
 
 ## GitHub repo secrets
 
-| Secret | Used by |
-|--------|---------|
-| `CLOUDFLARE_API_TOKEN` | Landing page + docs deploy |
-| `CLOUDFLARE_ACCOUNT_ID` | Landing page + docs deploy |
-| `ADMIN_KEY` | Template upload workflow |
-| `API_URL` | Template upload workflow |
+| Secret or variable | Used by |
+|--------------------|---------|
+| `ADMIN_KEY` secret | Template upload in `package-template.yml` and `release-cli.yml` |
+| `API_URL` secret/variable | Template upload target; default release workflow value is `https://taurikit-api-production.up.railway.app` |
